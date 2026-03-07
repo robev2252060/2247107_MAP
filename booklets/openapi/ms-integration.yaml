@@ -1,0 +1,21 @@
+openapi: 3.0.3
+
+info:
+  title: MAP ms-integration API
+  version: 1.0.0
+  description: API for the Integration microservice. Publishes normalized Measurevents Events via SSE.
+
+paths:
+
+  /api/v1/sensors/stream:
+
+    get:
+      summary: Stream normalized sensor events
+      description: Establishes a Server-Sent Events (SSE) connection to stream continuous, batched, and homogeneous sensor events.
+      responses:
+        '200':
+          description: SSE stream connected successfully.
+          content:
+            text/event-stream:
+              schema:
+                $ref: './components.yaml#/components/schemas/MeasurementEvent'

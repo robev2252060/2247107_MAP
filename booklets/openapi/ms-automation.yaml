@@ -1,0 +1,76 @@
+openapi: 3.0.3
+
+info:
+  title: Mars MS-Automation API
+  version: 1.0.0
+  description: API for the Automation Microservice. Manages CRUD for automation rules and streams actuator state events via SSE.
+
+paths:
+
+  /api/v1/actuators/stream:
+
+    get:
+      summary: Stream actuator state events
+      description: Establishes a Server-Sent Events (SSE) connection to stream actuator state changes to the frontend dashboard.
+      responses:
+        '200':
+          description: SSE stream connected successfully.
+          content:
+            text/event-stream:
+              schema:
+                $ref: './components.yaml#/components/schemas/MeasurementEvent'
+
+  /api/v1/rules:
+
+    post:
+      summary: Create a new automation rule
+      description: Persists a new environmental if/then rule to the database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components.yaml#/components/schemas/AutomationRule'
+      responses:
+        '201':
+          description: Rule successfully created.
+
+  /api/v1/rules/{id}:
+
+    put:
+      summary: Update an existing automation rule
+      description: Modifies an existing rule (e.g., changing the threshold value or target state).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components.yaml#/components/schemas/AutomationRule'
+      responses:
+        '200':
+          description: Rule successfully updated.
+        '404':
+          description: Rule not found.
+
+    delete:
+      summary: Delete an automation rule
+      description: Removes an existing rule from the database.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Rule successfully deleted.
+        '404':
+          description: Rule not found.
