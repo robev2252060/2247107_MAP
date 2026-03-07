@@ -1,0 +1,26 @@
+@startuml
+skinparam componentStyle rectangle
+
+component "frontend"       as fe
+component "actuators"      as act #line.dashed
+component "sensors"        as src #line.dashed
+component "ms-integration" as int
+component "ms-automation"  as auto
+
+database "DB" as db
+
+' Data integration
+src -[#6B3E26]up->   int : <color:#6B3E26>[KAFKA]</color>\nPublish heterogeneous\nsensor data
+int -[#228B22]down-> src : <color:#228B22>[REST]</color>\nPoll heterogeneous\nsensor data
+int -[#800080]up->    fe  : <color:#800080>[SSE]</color>\nPublish sensor event
+int  -[#6B3E26]right-> auto : <color:#6B3E26>[KAFKA]</color>\nPublish sensor event
+
+' Data processing
+fe   -[#228B22]right-> auto : <color:#228B22>[REST]</color>\nUpdate automation rules
+auto -[#B22222]down->  db   : <color:#B22222>[JDBC]</color>\nPersist automation rules
+auto -[#228B22]up->    act  : <color:#228B22>[REST]</color>\nUpdate states
+
+' Data display
+fe  -[#228B22]right-> act : <color:#228B22>[REST]</color>\nFetch actuator states
+
+@enduml
