@@ -1,0 +1,230 @@
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Infrastructure
+  # ---------------------------------------------------------------------------
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: mars-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: srvr,ruok,stat,mntr
+    networks:
+      - mars-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/commands/stat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: mars-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Two listeners: internal (kafka:29092) and external (localhost:9092)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 1
+    networks:
+      - mars-net
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  mongodb:
+    image: mongo:7.0
+    container_name: mars-mongodb
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mars-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Simulator (do NOT modify)
+  # ---------------------------------------------------------------------------
+
+  simulator:
+    image: mars-iot-simulator:multiarch_v1
+    container_name: mars-simulator
+    ports:
+      - "8080:8080"
+    networks:
+      - mars-net
+
+  # ---------------------------------------------------------------------------
+  # Backend microservices
+  # ---------------------------------------------------------------------------
+
+  ingestion-service:
+    build:
+      context: ./source/ingestion-service
+      dockerfile: Dockerfile
+    container_name: mars-ingestion
+    environment:
+      SIMULATOR_BASE_URL: http://simulator:8080
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POLL_INTERVAL_SECONDS: "5"
+      SERVICE_PORT: "8000"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      simulator:
+        condition: service_started
+    networks:
+      - mars-net
+    restart: on-failure
+
+  processing-service:
+    build:
+      context: ./source/processing-service
+      dockerfile: Dockerfile
+    container_name: mars-processing
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_GROUP_ID: processing-group
+      MONGODB_URI: mongodb://mongodb:27017
+      MONGODB_DB: mars_iot
+      SERVICE_PORT: "8001"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - mars-net
+
+  state-service:
+    build:
+      context: ./source/state-service
+      dockerfile: Dockerfile
+    container_name: mars-state
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_GROUP_ID: state-group
+      SERVICE_PORT: "8002"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - mars-net
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\",8002)); s.close()'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  rule-service:
+    build:
+      context: ./source/rule-service
+      dockerfile: Dockerfile
+    container_name: mars-rules
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017
+      MONGODB_DB: mars_iot
+      SERVICE_PORT: "8003"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - mars-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\",8003)); s.close()'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  actuator-service:
+    build:
+      context: ./source/actuator-service
+      dockerfile: Dockerfile
+    container_name: mars-actuator
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_GROUP_ID: actuator-group
+      SIMULATOR_BASE_URL: http://simulator:8080
+      SERVICE_PORT: "8004"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      simulator:
+        condition: service_started
+    networks:
+      - mars-net
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\",8004)); s.close()'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ---------------------------------------------------------------------------
+  # Frontend
+  # ---------------------------------------------------------------------------
+
+  frontend:
+    build:
+      context: ./source/frontend
+      dockerfile: Dockerfile
+    container_name: mars-frontend
+    networks:
+      - mars-net
+    ports:
+      - "3001:3000"
+
+  # ---------------------------------------------------------------------------
+  # API Gateway — single public entry point
+  # ---------------------------------------------------------------------------
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: mars-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      state-service:
+        condition: service_healthy
+      rule-service:
+        condition: service_healthy
+      actuator-service:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    networks:
+      - mars-net
+    restart: unless-stopped
+
+# =============================================================================
+# Networks & Volumes
+# =============================================================================
+
+networks:
+  mars-net:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local

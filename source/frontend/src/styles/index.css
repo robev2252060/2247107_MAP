@@ -1,0 +1,245 @@
+/* ============================================================
+   Mars IoT Platform — Global Styles
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --color-bg:        #0d0f14;
+  --color-surface:   #161b27;
+  --color-border:    #2a3148;
+  --color-primary:   #4f9cf9;
+  --color-danger:    #e05260;
+  --color-success:   #3ecf8e;
+  --color-text:      #e2e8f0;
+  --color-muted:     #7c8ba1;
+  --radius:          8px;
+  --sidebar-width:   220px;
+  --navbar-height:   56px;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ---- Layout ---- */
+.layout { display: flex; flex-direction: column; height: 100vh; }
+
+.layout__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.layout__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+/* ---- Navbar ---- */
+.navbar {
+  height: var(--navbar-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  color: var(--color-muted);
+  text-decoration: none;
+  border-radius: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar__link:hover,
+.sidebar__link--active {
+  background: rgba(79, 156, 249, 0.1);
+  color: var(--color-primary);
+}
+
+.sidebar__icon { font-size: 1rem; }
+
+/* ---- Sensor Grid ---- */
+.dashboard__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.sensor-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: border-color 0.3s;
+}
+
+.sensor-card:hover { border-color: var(--color-primary); }
+
+.sensor-card__icon { font-size: 1.8rem; line-height: 1; }
+
+.sensor-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sensor-card__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+}
+
+.sensor-card__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.sensor-card__ts {
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+/* ---- Status dot ---- */
+.status-dot { font-size: 0.8rem; font-weight: 600; }
+.status-dot--ok  { color: var(--color-success); }
+.status-dot--err { color: var(--color-danger); }
+
+/* ---- Rules ---- */
+.rules-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.rule-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+
+.rule-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rule-item--disabled { opacity: 0.45; }
+
+.rule-item__body { display: flex; flex-direction: column; gap: 4px; }
+
+.rule-item__condition { color: var(--color-primary); font-size: 0.85rem; }
+.rule-item__action    { color: var(--color-success);  font-size: 0.85rem; }
+.rule-item__desc      { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; }
+
+.rule-item__actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+/* ---- Rule Form ---- */
+.rule-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rule-form__title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
+.rule-form__error { color: var(--color-danger); font-size: 0.8rem; }
+
+.rule-form__row { display: flex; flex-direction: column; gap: 4px; }
+.rule-form__row label { font-size: 0.75rem; color: var(--color-muted); text-transform: uppercase; }
+
+.rule-form__row input,
+.rule-form__row select {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+/* ---- Actuators ---- */
+.actuator-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.actuator-toggle {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.actuator-toggle--on  { border-color: var(--color-success); }
+.actuator-toggle--off { border-color: var(--color-border); }
+
+.actuator-toggle__icon  { font-size: 1.8rem; }
+.actuator-toggle__label { flex: 1; font-weight: 500; text-transform: capitalize; }
+
+/* ---- Buttons ---- */
+.btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn--primary { background: var(--color-primary);  color: #fff; }
+.btn--danger  { background: var(--color-danger);   color: #fff; }
+.btn--ghost   { background: transparent; border: 1px solid var(--color-border); color: var(--color-text); }
+.btn--sm      { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+
+/* ---- Misc ---- */
+.page h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
+.error-banner { background: rgba(224,82,96,0.15); border: 1px solid var(--color-danger); border-radius: var(--radius); padding: 0.75rem 1rem; color: var(--color-danger); margin-bottom: 1rem; }
+.empty-state  { color: var(--color-muted); }
+.dashboard__empty { color: var(--color-muted); margin-top: 2rem; text-align: center; }
