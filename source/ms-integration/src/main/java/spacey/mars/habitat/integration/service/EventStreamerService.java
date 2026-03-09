@@ -3,6 +3,7 @@ package spacey.mars.habitat.integration.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spacey.mars.habitat.integration.dto.Measurement;
@@ -23,8 +24,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class EventStreamerService {
 
 	private final ObjectMapper objectMapper;
+	private final KafkaTemplate<String, MeasurementEvent> kafkaTemplate;
 	private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 	private final Map<String, CachedMeasurement> measurementCache = new ConcurrentHashMap<>();
+
+	private static final String MEASUREMENTS_TOPIC = "measurements";
 
 	public SseEmitter createEmitter() {
 
@@ -55,6 +59,7 @@ public class EventStreamerService {
 	public void broadcast(MeasurementEvent event) {
 
 		cacheEvent(event);
+		publishToKafka(event);
 
 		if (emitters.isEmpty())
 			return;
@@ -72,6 +77,15 @@ public class EventStreamerService {
 			}
 
 		emitters.removeAll(deadEmitters);
+	}
+
+	private void publishToKafka(MeasurementEvent event) {
+		try {
+			kafkaTemplate.send(MEASUREMENTS_TOPIC, event.getSource(), event);
+			log.debug("Published measurement event to Kafka topic '{}' for source: {}", MEASUREMENTS_TOPIC, event.getSource());
+		} catch (Exception e) {
+			log.error("Failed to publish measurement event to Kafka", e);
+		}
 	}
 
 	private void cacheEvent(MeasurementEvent event) {

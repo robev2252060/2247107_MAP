@@ -10,12 +10,12 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -23,7 +23,7 @@ services:
       KAFKA_NUM_PARTITIONS: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
-      - "9092:9092"
+      - "9094:9094"
     volumes:
       - kafka-data:/var/lib/kafka/data
     networks:
@@ -82,23 +82,7 @@ services:
       simulator.base-url: simulator:8080
       simulator.protocol: http
       server.port: 8080
-    depends_on:
-      simulator:
-        condition: service_started
-    networks:
-      - mars-net
-    restart: on-failure
-
-  ingestion-service:
-    build:
-      context: ./source/ingestion-service
-      dockerfile: Dockerfile
-    container_name: mars-ingestion
-    environment:
-      SIMULATOR_BASE_URL: http://simulator:8080
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      POLL_INTERVAL_SECONDS: "5"
-      SERVICE_PORT: "8000"
+      spring.kafka.bootstrap-servers: kafka:9092
     depends_on:
       kafka:
         condition: service_healthy
