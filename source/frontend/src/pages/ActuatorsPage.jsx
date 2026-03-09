@@ -23,7 +23,7 @@ export default function ActuatorsPage() {
       await setActuatorState(actuatorId, newState);
       setActuators((prev) =>
         prev.map((a) =>
-          (a.id || a.name) === actuatorId ? { ...a, state: newState } : a
+          (a.actuator_name) === actuatorId ? { ...a, state: newState } : a
         )
       );
     } catch (err) {

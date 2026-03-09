@@ -9,9 +9,9 @@ export default function ActuatorPanel({ actuators, onToggle }) {
     <div className="actuator-panel">
       {actuators.map((a) => (
         <ActuatorToggle
-          key={a.id || a.name}
+          key={a.actuator_name}
           actuator={a}
-          onToggle={(newState) => onToggle(a.id || a.name, newState)}
+          onToggle={(newState) => onToggle(a.actuator_name, newState)}
         />
       ))}
     </div>

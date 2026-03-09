@@ -20,6 +20,7 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+# This needs to be in the database
 KNOWN_ACTUATORS = {
     "cooling_fan",
     "entrance_humidifier",
@@ -61,4 +62,6 @@ async def get_all_actuators() -> list[dict]:
     async with httpx.AsyncClient() as client:
         response = await client.get(url, timeout=5.0)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        # Transform to list of dicts
+        return [{"actuator_name": actuator_id, "state": state} for actuator_id, state in data["actuators"].items()]
