@@ -25,13 +25,21 @@ class StateStore:
         sensor_id: str = event.get("sensor_id", "unknown")
         self._state[sensor_id] = event
         logger.debug("State updated for sensor %s", sensor_id)
-        self._broadcast(event)
+        self._broadcast({"type": "sensor_update", "data": event})
 
-    def _broadcast(self, event: dict) -> None:
+    def publish_rule_event(self, event: dict) -> None:
+        """Broadcast a rule transition event to all SSE subscribers."""
+        logger.debug(
+            "Rule event: rule=%s triggered=%s",
+            event.get("rule_id"), event.get("triggered"),
+        )
+        self._broadcast({"type": "rule_event", "data": event})
+
+    def _broadcast(self, envelope: dict) -> None:
         dead: set[asyncio.Queue] = set()
         for q in self._subscribers:
             try:
-                q.put_nowait(event)
+                q.put_nowait(envelope)
             except asyncio.QueueFull:
                 dead.add(q)
         self._subscribers -= dead

@@ -28,7 +28,7 @@ export async function fetchSensor(sensorId) {
  * @param {(event: object) => void} onUpdate      Called on each sensor update
  * @returns {EventSource} — call .close() to disconnect
  */
-export function openSensorStream(onSnapshot, onUpdate) {
+export function openSensorStream(onSnapshot, onUpdate, onRuleEvent) {
   const es = new EventSource(`${BASE}/sensors/stream/sse`);
 
   es.addEventListener("snapshot", (e) => {
@@ -37,6 +37,10 @@ export function openSensorStream(onSnapshot, onUpdate) {
 
   es.addEventListener("sensor_update", (e) => {
     onUpdate(JSON.parse(e.data));
+  });
+
+  es.addEventListener("rule_event", (e) => {
+    if (onRuleEvent) onRuleEvent(JSON.parse(e.data));
   });
 
   es.onerror = (err) => {

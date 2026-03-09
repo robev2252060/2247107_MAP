@@ -78,8 +78,10 @@ async def sse_stream():
             yield f"event: snapshot\ndata: {json.dumps(snapshot)}\n\n"
 
             while True:
-                event = await q.get()
-                yield f"event: sensor_update\ndata: {json.dumps(event)}\n\n"
+                envelope = await q.get()
+                evt_type = envelope.get("type", "sensor_update")
+                evt_data = envelope.get("data", envelope)
+                yield f"event: {evt_type}\ndata: {json.dumps(evt_data)}\n\n"
         except asyncio.CancelledError:
             pass
         finally:
