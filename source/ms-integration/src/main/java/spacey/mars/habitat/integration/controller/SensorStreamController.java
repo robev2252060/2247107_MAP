@@ -23,4 +23,5 @@ public class SensorStreamController {
 		log.info("New SSE stream connection request");
 		return eventStreamerService.createEmitter();
 	}
+
 }

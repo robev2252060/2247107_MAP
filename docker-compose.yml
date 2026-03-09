@@ -1,4 +1,3 @@
-
 services:
 
   # ---------------------------------------------------------------------------
@@ -72,6 +71,22 @@ services:
   # ---------------------------------------------------------------------------
   # Backend microservices
   # ---------------------------------------------------------------------------
+
+  ms-integration:
+    build:
+      context: ./source/ms-integration
+      dockerfile: Dockerfile
+    container_name: mars-ms-integration
+    environment:
+      simulator.base-url: simulator:8080
+      simulator.protocol: http
+      server.port: 8080
+    depends_on:
+      simulator:
+        condition: service_started
+    networks:
+      - mars-net
+    restart: on-failure
 
   ingestion-service:
     build:
