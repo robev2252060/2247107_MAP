@@ -1,4 +1,4 @@
-const BASE = "/api/integration/v1";
+const BASE = "/api/integration";
 
 /**
  * Open an SSE connection to receive normalized measurement events.

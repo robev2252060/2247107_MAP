@@ -16,7 +16,7 @@ public class SensorStreamController {
 	private final EventStreamerService eventStreamerService;
 
 	@GetMapping(
-		path = "/api/v1/sensors/stream",
+		path = "/api/sensors/stream",
 		produces = MediaType.TEXT_EVENT_STREAM_VALUE
 	)
 	public SseEmitter streamSensors() {

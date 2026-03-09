@@ -7,7 +7,7 @@ info:
 
 paths:
 
-  /api/v1/sensors/stream:
+  /api/sensors/stream:
 
     get:
       summary: Stream normalized sensor events

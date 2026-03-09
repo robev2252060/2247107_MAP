@@ -8,7 +8,7 @@ import spacey.mars.habitat.integration.service.SensorPollingService;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/polling")
+@RequestMapping("/api/polling")
 @RequiredArgsConstructor
 public class PollingController {
 
