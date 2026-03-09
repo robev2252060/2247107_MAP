@@ -38,15 +38,17 @@ Deployment:
 
 Access through: http://localhost:80
 
+PostgreSQL bootstrap:
+- Schema init scripts are loaded from `source/postgres`.
+- Init scripts under `/docker-entrypoint-initdb.d` run only when the `postgres-data` volume is empty.
+- If you need to re-run schema bootstrap, remove containers and volumes first.
 
 For restart, first run:
-docker compose down -v
+`docker compose down -v`
 
 
 
 Any changes can be made through refactoring the corresponding files of the service and the docker_compose itself, and adding dependencies through requirements.txt
-
-
 
 
 

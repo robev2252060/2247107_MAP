@@ -176,7 +176,7 @@ CREATE INDEX IF NOT EXISTS idx_processed_data_anomaly ON processed_data(anomaly_
 
 -- Latest readings per sensor
 CREATE OR REPLACE VIEW latest_readings AS
-SELECT 
+SELECT
     s.device_id,
     s.name,
     sr.measurement_type,
@@ -186,14 +186,14 @@ SELECT
 FROM sensors s
 LEFT JOIN sensor_readings sr ON s.id = sr.sensor_id
 WHERE sr.timestamp = (
-    SELECT MAX(timestamp) 
-    FROM sensor_readings 
+    SELECT MAX(timestamp)
+    FROM sensor_readings
     WHERE sensor_id = s.id
 );
 
 -- Active anomalies
 CREATE OR REPLACE VIEW active_anomalies AS
-SELECT 
+SELECT
     device_id,
     COUNT(*) as anomaly_count,
     MAX(processed_at) as last_anomaly
@@ -203,3 +203,4 @@ WHERE anomaly_detected = TRUE
 GROUP BY device_id;
 
 COMMIT;
+

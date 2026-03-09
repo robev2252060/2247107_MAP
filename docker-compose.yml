@@ -44,10 +44,8 @@ services:
       POSTGRES_DB: mars_iot
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      # Persistent database storage (local project directory)
-      - ./postgres-data:/var/lib/postgresql/data
-      # Initialization scripts
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
+      - ./source/postgres:/docker-entrypoint-initdb.d:ro
     networks:
       - mars-net
     healthcheck:
