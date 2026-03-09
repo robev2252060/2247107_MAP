@@ -56,6 +56,15 @@ async def set_actuator_state(
     return result
 
 
+def _normalize_state(raw_state) -> str:
+    """Normalize simulator state values to canonical 'ON' / 'OFF' strings."""
+    if isinstance(raw_state, bool):
+        return "ON" if raw_state else "OFF"
+    if isinstance(raw_state, str):
+        return "ON" if raw_state.upper() == "ON" else "OFF"
+    return "OFF"
+
+
 async def get_all_actuators() -> list[dict]:
     """Fetch current state of all actuators from the simulator."""
     url = f"{settings.simulator_base_url}/api/actuators"
@@ -63,5 +72,8 @@ async def get_all_actuators() -> list[dict]:
         response = await client.get(url, timeout=5.0)
         response.raise_for_status()
         data = response.json()
-        # Transform to list of dicts
-        return [{"actuator_name": actuator_id, "state": state} for actuator_id, state in data["actuators"].items()]
+        # Transform to list of dicts, normalising state to "ON" / "OFF"
+        return [
+            {"actuator_name": actuator_id, "state": _normalize_state(state)}
+            for actuator_id, state in data["actuators"].items()
+        ]

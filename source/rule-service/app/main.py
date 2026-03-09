@@ -6,11 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routes import router
+from app.db import get_pool
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
 )
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Mars IoT — Rule Service", version="1.0.0")
 
@@ -22,6 +25,19 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Test database connection on startup."""
+    try:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+        logger.info("Database connection test successful")
+    except Exception as e:
+        logger.error(f"Database connection test failed: {e}")
+        raise
 
 
 @app.get("/health")

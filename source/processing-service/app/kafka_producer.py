@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 TOPIC_NORMALIZED_EVENTS  = "mars.normalized.events"
 TOPIC_ACTUATOR_COMMANDS  = "mars.actuator.commands"
+TOPIC_RULE_EVENTS        = "mars.rule.events"
 
 _producer: AIOKafkaProducer | None = None
 
@@ -39,3 +40,8 @@ async def publish_normalized_event(event: dict) -> None:
 async def publish_actuator_command(command: dict) -> None:
     producer = await get_producer()
     await producer.send(TOPIC_ACTUATOR_COMMANDS, key=command["actuator_id"], value=command)
+
+
+async def publish_rule_event(event: dict) -> None:
+    producer = await get_producer()
+    await producer.send(TOPIC_RULE_EVENTS, key=event["rule_id"], value=event)

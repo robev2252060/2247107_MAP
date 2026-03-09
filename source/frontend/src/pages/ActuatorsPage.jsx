@@ -16,7 +16,12 @@ export default function ActuatorsPage() {
     }
   }, []);
 
-  useEffect(() => { loadActuators(); }, [loadActuators]);
+  // Initial load + poll every 5 s to reflect rule-triggered state changes
+  useEffect(() => {
+    loadActuators();
+    const id = setInterval(loadActuators, 5000);
+    return () => clearInterval(id);
+  }, [loadActuators]);
 
   async function handleToggle(actuatorId, newState) {
     try {
