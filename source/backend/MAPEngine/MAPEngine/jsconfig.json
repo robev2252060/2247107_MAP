@@ -1,0 +1,9 @@
+{
+  "Kafka": {
+    "BootstrapServers": "kafka:9092",
+    "GroupId": "map-engine"
+  },
+  "ActuatorService": {
+    "BaseUrl": "http://actuator-service:8080"
+  }
+}

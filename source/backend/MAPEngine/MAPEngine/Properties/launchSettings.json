@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MAPEngine": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
