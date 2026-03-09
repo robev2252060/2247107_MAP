@@ -125,10 +125,29 @@ body {
   color: var(--color-muted);
 }
 
-.sensor-card__value {
-  font-size: 1.4rem;
+.sensor-card__metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sensor-card__metric {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sensor-card__metric-name {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.sensor-card__metric-value {
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-primary);
+  text-align: right;
 }
 
 .sensor-card__ts {
