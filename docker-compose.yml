@@ -20,6 +20,8 @@ services:
       timeout: 5s
       retries: 5
 
+  # To be changed with Java
+  # Combine Zookeeper and Kafka.
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: mars-kafka
@@ -56,6 +58,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: mars-postgres
+    environment:
+      POSTGRES_USER: mars
+      POSTGRES_PASSWORD: mars_secure_pass
+      POSTGRES_DB: mars_iot
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      # Persistent database storage (local project directory)
+      - ./postgres-data:/var/lib/postgresql/data
+      # Initialization scripts
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - mars-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mars -d mars_iot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   # ---------------------------------------------------------------------------
   # Simulator (do NOT modify)
@@ -110,6 +134,7 @@ services:
         condition: service_healthy
     networks:
       - mars-net
+    restart: on-failure
 
   state-service:
     build:
@@ -227,4 +252,6 @@ networks:
 
 volumes:
   mongo-data:
+    driver: local
+  postgres-data:
     driver: local

@@ -7,7 +7,7 @@ const ACTUATOR_ICONS = {
 
 export default function ActuatorToggle({ actuator, onToggle }) {
   const isOn  = actuator.state === "ON";
-  const id    = actuator.id || actuator.name;
+  const id    = actuator.actuator_name;
   const icon  = ACTUATOR_ICONS[id] ?? "⚡";
   const label = id.replace(/_/g, " ");
 
