@@ -1,4 +1,4 @@
-package spacey.mars.habitat.integration.dto.rest;
+package spacey.mars.habitat.integration.dto.polling;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LevelV1 {
+public class ParticulateV1 {
 
 	@JsonProperty("sensor_id")
 	private String sensorId;
@@ -19,11 +19,14 @@ public class LevelV1 {
 	@JsonProperty("captured_at")
 	private Instant capturedAt;
 
-	@JsonProperty("level_pct")
-	private Double levelPct;
+	@JsonProperty("pm1_ug_m3")
+	private Double pm1UgM3;
 
-	@JsonProperty("level_liters")
-	private Double levelLiters;
+	@JsonProperty("pm25_ug_m3")
+	private Double pm25UgM3;
+
+	@JsonProperty("pm10_ug_m3")
+	private Double pm10UgM3;
 
 	private Status status;
 

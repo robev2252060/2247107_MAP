@@ -4,14 +4,14 @@ import org.springframework.stereotype.Component;
 import spacey.mars.habitat.integration.dto.Measurement;
 import spacey.mars.habitat.integration.dto.MeasurementEvent;
 import spacey.mars.habitat.integration.dto.Status;
-import spacey.mars.habitat.integration.dto.rest.ChemistryV1;
-import spacey.mars.habitat.integration.dto.rest.LevelV1;
-import spacey.mars.habitat.integration.dto.rest.ParticulateV1;
-import spacey.mars.habitat.integration.dto.rest.ScalarV1;
-import spacey.mars.habitat.integration.dto.topic.AirlockV1;
-import spacey.mars.habitat.integration.dto.topic.EnvironmentV1;
-import spacey.mars.habitat.integration.dto.topic.PowerV1;
-import spacey.mars.habitat.integration.dto.topic.ThermalLoopV1;
+import spacey.mars.habitat.integration.dto.polling.ChemistryV1;
+import spacey.mars.habitat.integration.dto.polling.LevelV1;
+import spacey.mars.habitat.integration.dto.polling.ParticulateV1;
+import spacey.mars.habitat.integration.dto.polling.ScalarV1;
+import spacey.mars.habitat.integration.dto.stream.AirlockV1;
+import spacey.mars.habitat.integration.dto.stream.EnvironmentV1;
+import spacey.mars.habitat.integration.dto.stream.PowerV1;
+import spacey.mars.habitat.integration.dto.stream.ThermalLoopV1;
 
 import java.util.List;
 
@@ -110,11 +110,7 @@ public class MeasurementEventConverter {
 			payload.getEventTime(),
 			payload.getTopic(),
 			toStatusString(payload.getStatus()),
-			List.of(
-				new Measurement("loop", payload.getLoop()),
-				new Measurement("temperature_c", payload.getTemperatureC()),
-				new Measurement("flow_l_min", payload.getFlowLMin())
-			)
+			payload.getMeasurements()
 		);
 	}
 

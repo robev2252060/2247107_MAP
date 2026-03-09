@@ -6,14 +6,14 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import spacey.mars.habitat.integration.service.SensorStreamService;
+import spacey.mars.habitat.integration.service.EventStreamerService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class SensorStreamController {
 
-	private final SensorStreamService sensorStreamService;
+	private final EventStreamerService eventStreamerService;
 
 	@GetMapping(
 		path = "/api/v1/sensors/stream",
@@ -21,6 +21,6 @@ public class SensorStreamController {
 	)
 	public SseEmitter streamSensors() {
 		log.info("New SSE stream connection request");
-		return sensorStreamService.createEmitter();
+		return eventStreamerService.createEmitter();
 	}
 }

@@ -11,10 +11,10 @@ import spacey.mars.habitat.integration.config.SensorRegistry;
 import spacey.mars.habitat.integration.config.SensorType;
 import spacey.mars.habitat.integration.component.MeasurementEventConverter;
 import spacey.mars.habitat.integration.dto.MeasurementEvent;
-import spacey.mars.habitat.integration.dto.rest.ChemistryV1;
-import spacey.mars.habitat.integration.dto.rest.LevelV1;
-import spacey.mars.habitat.integration.dto.rest.ParticulateV1;
-import spacey.mars.habitat.integration.dto.rest.ScalarV1;
+import spacey.mars.habitat.integration.dto.polling.ChemistryV1;
+import spacey.mars.habitat.integration.dto.polling.LevelV1;
+import spacey.mars.habitat.integration.dto.polling.ParticulateV1;
+import spacey.mars.habitat.integration.dto.polling.ScalarV1;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,8 +31,14 @@ public class SensorPollingService {
 	private final SensorRegistry sensorRegistry;
 	private final RestClient restClient;
 	private final MeasurementEventConverter measurementEventConverter;
-	private final SensorStreamService sensorStreamService;
+	private final EventStreamerService eventStreamerService;
 	private final ScheduledExecutorService executor;
+
+	@Value("${simulator.base-url}")
+	private String simulatorBaseUrl;
+
+	@Value("${simulator.protocol:http}")
+	private String simulatorProtocol;
 
 	@Value("${ms-integration.base-polling-rate:5000}")
 	private long configuredBasePollingRate;
@@ -50,23 +56,24 @@ public class SensorPollingService {
 
 	public void startPolling(String sensorId) {
 
-		SensorConfig config = sensorRegistry.get(sensorId);
+		SensorConfig config = sensorRegistry.getRest(sensorId);
 		if (config == null || tasks.containsKey(sensorId))
 			return;
 
 		ScheduledFuture<?> task = executor.scheduleAtFixedRate(
-				() -> poll(sensorId),
+			() -> poll(sensorId),
 			0,
 			pollingRateMs.get(),
 			TimeUnit.MILLISECONDS
 		);
+
 		tasks.put(sensorId, task);
 	}
 
 	private void poll(String sensorId) {
 		try {
 
-			SensorConfig cfg = sensorRegistry.get(sensorId);
+			SensorConfig cfg = sensorRegistry.getRest(sensorId);
 			if (cfg == null)
 				return;
 
@@ -75,16 +82,20 @@ public class SensorPollingService {
 				return;
 
 			MeasurementEvent measurementEvent = measurementEventConverter.convert(payload);
-			sensorStreamService.broadcast(measurementEvent);
+			eventStreamerService.broadcast(measurementEvent);
 
 		} catch (Exception e) {
-			log.error("Poll error: {}", sensorId);
+			log.error("Poll error: {}", sensorId, e);
 		}
 	}
 
 	private Object fetch(String sensorId, SensorType sensorType) {
 
-		String url = "http://localhost:8080/api/sensors/" + sensorId;
+		String url = simulatorProtocol +
+			"://" +
+			simulatorBaseUrl +
+			"/api/sensors/" +
+			sensorId;
 
 		try {
 
@@ -93,23 +104,24 @@ public class SensorPollingService {
 				case CHEMISTRY_V1 -> restClient.get().uri(url).retrieve().body(ChemistryV1.class);
 				case LEVEL_V1 -> restClient.get().uri(url).retrieve().body(LevelV1.class);
 				case PARTICULATE_V1 -> restClient.get().uri(url).retrieve().body(ParticulateV1.class);
+				default -> throw new IllegalArgumentException("Unsupported sensor type: " + sensorType);
 			};
 
 		} catch (Exception e) {
 			log.error(
 				"Failed to fetch data for sensor {}: {}",
-				sensorId,
-				e.getMessage()
+				sensorId, e.getMessage(), e
 			);
 			return null;
 		}
 	}
 
 	public void stopPolling(String sensorId) {
+
 		ScheduledFuture<?> task = tasks.remove(sensorId);
-		if (task != null) {
+		if (task != null)
 			task.cancel(false);
-		}
+
 	}
 
 	public void updateRate(long rateMs) {
@@ -124,6 +136,7 @@ public class SensorPollingService {
 	}
 
 	public void startAll() {
-		sensorRegistry.getAll().forEach(c -> startPolling(c.getId()));
+		sensorRegistry.getAllRest().forEach(c -> startPolling(c.getId()));
 	}
+
 }

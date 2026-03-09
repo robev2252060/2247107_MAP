@@ -1,4 +1,4 @@
-package spacey.mars.habitat.integration.dto.rest;
+package spacey.mars.habitat.integration.dto.polling;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

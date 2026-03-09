@@ -6,18 +6,31 @@ import java.util.concurrent.ConcurrentMap;
 
 public class SensorRegistry {
 
-	private final ConcurrentMap<String, SensorConfig> sensors = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, SensorConfig> restSensors = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, SensorConfig> streamSensors = new ConcurrentHashMap<>();
 
-	public void register(SensorConfig config) {
-		sensors.put(config.getId(), config);
+	public void registerRest(SensorConfig config) {
+		restSensors.put(config.getId(), config);
 	}
 
-	public SensorConfig get(String sensorId) {
-		return sensors.get(sensorId);
+	public void registerStream(SensorConfig config) {
+		streamSensors.put(config.getId(), config);
 	}
 
-	public Collection<SensorConfig> getAll() {
-		return sensors.values();
+	public SensorConfig getRest(String sensorId) {
+		return restSensors.get(sensorId);
+	}
+
+	public SensorConfig getStream(String sensorId) {
+		return streamSensors.get(sensorId);
+	}
+
+	public Collection<SensorConfig> getAllRest() {
+		return restSensors.values();
+	}
+
+	public Collection<SensorConfig> getAllStream() {
+		return streamSensors.values();
 	}
 
 }

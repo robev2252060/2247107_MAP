@@ -14,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SensorStreamService {
+public class EventStreamerService {
 
 	private final ObjectMapper objectMapper;
 	private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();

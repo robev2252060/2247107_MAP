@@ -1,31 +1,29 @@
-package spacey.mars.habitat.integration.dto.topic;
+package spacey.mars.habitat.integration.dto.stream;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import spacey.mars.habitat.integration.dto.Status;
 
 import java.time.Instant;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class EnvironmentV1 {
+public class AirlockV1 {
 
 	private String topic;
 
 	@JsonProperty("event_time")
 	private Instant eventTime;
 
-	private String loop;
+	@JsonProperty("airlock_id")
+	private String airlockId;
 
-	@JsonProperty("temperature_c")
-	private Double temperatureC;
+	@JsonProperty("cycles_per_hour")
+	private Double cyclesPerHour;
 
-	@JsonProperty("flow_l_min")
-	private Double flowLMin;
-
-	private Status status;
+	@JsonProperty("last_state")
+	private AirlockState lastState;
 
 }

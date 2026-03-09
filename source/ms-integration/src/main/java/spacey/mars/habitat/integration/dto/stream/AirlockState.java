@@ -1,4 +1,4 @@
-package spacey.mars.habitat.integration.dto.topic;
+package spacey.mars.habitat.integration.dto.stream;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
