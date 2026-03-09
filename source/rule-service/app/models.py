@@ -71,6 +71,13 @@ class RuleUpdate(BaseModel):
     enabled: Optional[bool] = None
     description: Optional[str] = None
 
+    @field_validator("operator")
+    @classmethod
+    def validate_operator_update(cls, v: str) -> str:
+        if v is not None and v not in VALID_OPERATORS:
+            raise ValueError(f"operator must be one of {VALID_OPERATORS}")
+        return v
+
 
 class RuleResponse(RuleCreate):
     id: str = Field(..., alias="_id")

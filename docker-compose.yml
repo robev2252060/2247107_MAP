@@ -46,19 +46,6 @@ services:
       timeout: 10s
       retries: 10
 
-  mongodb:
-    image: mongo:7.0
-    container_name: mars-mongodb
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - mars-net
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   postgres:
     image: postgres:16-alpine
     container_name: mars-postgres
@@ -124,13 +111,12 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_GROUP_ID: processing-group
-      MONGODB_URI: mongodb://mongodb:27017
-      MONGODB_DB: mars_iot
+      DATABASE_URL: postgresql://mars:mars_secure_pass@postgres:5432/mars_iot
       SERVICE_PORT: "8001"
     depends_on:
       kafka:
         condition: service_healthy
-      mongodb:
+      postgres:
         condition: service_healthy
     networks:
       - mars-net
@@ -164,11 +150,10 @@ services:
       dockerfile: Dockerfile
     container_name: mars-rules
     environment:
-      MONGODB_URI: mongodb://mongodb:27017
-      MONGODB_DB: mars_iot
+      DATABASE_URL: postgresql://mars:mars_secure_pass@postgres:5432/mars_iot
       SERVICE_PORT: "8003"
     depends_on:
-      mongodb:
+      postgres:
         condition: service_healthy
     networks:
       - mars-net
@@ -251,7 +236,5 @@ networks:
     driver: bridge
 
 volumes:
-  mongo-data:
-    driver: local
   postgres-data:
     driver: local
