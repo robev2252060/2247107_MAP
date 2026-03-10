@@ -26,7 +26,7 @@ placed on the `mars.normalized.events` Kafka topic.
 | `schema_family` | string | Simulator schema family (e.g. `rest.scalar.v1`) |
 | `timestamp` | string | ISO-8601 UTC; taken from the raw payload or generated at normalisation time |
 | `value` | number \| object | Primary numeric reading; object for multi-field payloads |
-| `unit` | string \| null | SI unit (e.g. `°C`, `%`, `µg/m³`); null when not applicable |
+| `unit` | string \| null | Standardized SI unit (e.g. `°C`, `%`, `µg/m³`) - values are converted to canonical units for consistency; null when not applicable |
 | `raw` | object | Verbatim original payload from the simulator — never modified |
 
 ### Sensor → schema family mapping
