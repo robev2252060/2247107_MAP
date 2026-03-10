@@ -1,0 +1,37 @@
+const ACTUATOR_ICONS = {
+  cooling_fan:          "🌀",
+  entrance_humidifier:  "💦",
+  hall_ventilation:     "🌬️",
+  habitat_heater:       "🔥",
+};
+
+function formatUpdatedAt(updatedAt) {
+  if (!updatedAt) return "-";
+  const parsed = new Date(updatedAt);
+  if (Number.isNaN(parsed.getTime())) return "-";
+  return parsed.toLocaleTimeString();
+}
+
+export default function ActuatorToggle({ actuator, onToggle }) {
+  const isOn  = actuator.state === "ON";
+  const id    = actuator.actuator_name;
+  const icon  = ACTUATOR_ICONS[id] ?? "⚡";
+  const label = id.replace(/_/g, " ");
+  const updatedLabel = formatUpdatedAt(actuator.updated_at);
+
+  return (
+    <div className={`actuator-toggle ${isOn ? "actuator-toggle--on" : "actuator-toggle--off"}`}>
+      <span className="actuator-toggle__icon">{icon}</span>
+      <div className="actuator-toggle__meta">
+        <span className="actuator-toggle__label">{label}</span>
+        <span className="actuator-toggle__ts">Updated {updatedLabel}</span>
+      </div>
+      <button
+        className={`btn ${isOn ? "btn--danger" : "btn--primary"}`}
+        onClick={() => onToggle(isOn ? "OFF" : "ON")}
+      >
+        {isOn ? "Turn OFF" : "Turn ON"}
+      </button>
+    </div>
+  );
+}

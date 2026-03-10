@@ -7,7 +7,7 @@ info:
 
 paths:
 
-  /api/v1/sensors/stream:
+  /api/sensors/stream:
 
     get:
       summary: Stream normalized sensor events
@@ -19,3 +19,38 @@ paths:
             text/event-stream:
               schema:
                 $ref: './components.yaml#/components/schemas/MeasurementEvent'
+
+  /api/polling/rate:
+
+    get:
+      summary: Get global polling rate
+      description: Returns the current polling interval used for legacy REST sensors (milliseconds).
+      responses:
+        '200':
+          description: Current polling rate.
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+    post:
+      summary: Update global polling rate
+      description: Updates the polling interval used for legacy REST sensors.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - rate
+              properties:
+                rate:
+                  type: integer
+                  format: int64
+                  description: Polling interval in milliseconds (must be > 0).
+      responses:
+        '200':
+          description: Polling rate updated.
+        '400':
+          description: Invalid polling rate supplied.
