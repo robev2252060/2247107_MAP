@@ -1,14 +1,4 @@
-import { useState } from "react";
-
-const SENSOR_SOURCES = [
-  "greenhouse_temperature", "entrance_humidity", "co2_hall",
-  "hydroponic_ph", "water_tank_level", "corridor_pressure",
-  "air_quality_pm25", "air_quality_voc",
-  "mars/telemetry/solar_array", "mars/telemetry/radiation",
-  "mars/telemetry/life_support", "mars/telemetry/thermal_loop",
-  "mars/telemetry/power_bus", "mars/telemetry/power_consumption",
-  "mars/telemetry/airlock",
-];
+import { useEffect, useMemo, useState } from "react";
 
 const ACTUATORS = [
   "cooling_fan", "entrance_humidifier",
@@ -18,8 +8,8 @@ const ACTUATORS = [
 const OPERATORS = ["<", "<=", "=", ">=", ">"];
 
 const EMPTY = {
-  sensor_source: SENSOR_SOURCES[0],
-  sensor_metric: "temperature",
+  sensor_source: "",
+  sensor_metric: "",
   operator: ">",
   threshold_value: "",
   target_actuator: ACTUATORS[0],
@@ -27,9 +17,40 @@ const EMPTY = {
   description: "",
 };
 
-export default function RuleForm({ onSubmit, loading }) {
+export default function RuleForm({ onSubmit, loading, sourceMetrics }) {
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState(null);
+
+  const sensorSources = useMemo(
+    () => Object.keys(sourceMetrics || {}).sort((a, b) => a.localeCompare(b)),
+    [sourceMetrics]
+  );
+
+  const availableMetrics = useMemo(
+    () => (sourceMetrics?.[form.sensor_source] || []).slice().sort((a, b) => a.localeCompare(b)),
+    [sourceMetrics, form.sensor_source]
+  );
+
+  useEffect(() => {
+    if (sensorSources.length === 0) {
+      if (form.sensor_source || form.sensor_metric) {
+        setForm((prev) => ({ ...prev, sensor_source: "", sensor_metric: "" }));
+      }
+      return;
+    }
+
+    if (!sensorSources.includes(form.sensor_source)) {
+      const nextSource = sensorSources[0];
+      const nextMetric = (sourceMetrics?.[nextSource] || [])[0] || "";
+      setForm((prev) => ({ ...prev, sensor_source: nextSource, sensor_metric: nextMetric }));
+      return;
+    }
+
+    const metricsForSource = sourceMetrics?.[form.sensor_source] || [];
+    if (!metricsForSource.includes(form.sensor_metric)) {
+      setForm((prev) => ({ ...prev, sensor_metric: metricsForSource[0] || "" }));
+    }
+  }, [sensorSources, sourceMetrics, form.sensor_source, form.sensor_metric]);
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -38,6 +59,11 @@ export default function RuleForm({ onSubmit, loading }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+
+    if (!form.sensor_source) {
+      setError("Sensor source is required.");
+      return;
+    }
 
     if (!form.sensor_metric.trim()) {
       setError("Metric is required.");
@@ -60,7 +86,11 @@ export default function RuleForm({ onSubmit, loading }) {
         enabled: true,
         description: form.description || null,
       });
-      setForm(EMPTY);
+      setForm((prev) => ({
+        ...EMPTY,
+        sensor_source: prev.sensor_source,
+        sensor_metric: prev.sensor_metric,
+      }));
     } catch (err) {
       setError(err.message);
     }
@@ -74,21 +104,26 @@ export default function RuleForm({ onSubmit, loading }) {
 
       <div className="rule-form__row">
         <label>Sensor Source</label>
-        <select name="sensor_source" value={form.sensor_source} onChange={handleChange}>
-          {SENSOR_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+        <select name="sensor_source" value={form.sensor_source} onChange={handleChange} disabled={sensorSources.length === 0}>
+          {sensorSources.length === 0 ? (
+            <option value="">Waiting for live measurements...</option>
+          ) : (
+            sensorSources.map((s) => <option key={s} value={s}>{s}</option>)
+          )}
         </select>
       </div>
 
       <div className="rule-form__row">
         <label>Metric</label>
-        <input
-          type="text"
-          name="sensor_metric"
-          value={form.sensor_metric}
-          onChange={handleChange}
-          placeholder="e.g. temperature, pm25_ug_m3, voltage_v"
-          required
-        />
+        <select name="sensor_metric" value={form.sensor_metric} onChange={handleChange} disabled={availableMetrics.length === 0}>
+          {availableMetrics.length === 0 ? (
+            <option value="">No metrics available</option>
+          ) : (
+            availableMetrics.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))
+          )}
+        </select>
       </div>
 
       <div className="rule-form__row">
@@ -137,7 +172,7 @@ export default function RuleForm({ onSubmit, loading }) {
         />
       </div>
 
-      <button className="btn btn--primary" type="submit" disabled={loading}>
+      <button className="btn btn--primary" type="submit" disabled={loading || sensorSources.length === 0 || availableMetrics.length === 0}>
         {loading ? "Saving..." : "Add Rule"}
       </button>
     </form>

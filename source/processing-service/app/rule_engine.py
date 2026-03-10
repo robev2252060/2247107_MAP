@@ -41,6 +41,14 @@ OPERATORS: dict[str, Any] = {
     ">":  op.gt,
 }
 
+TELEMETRY_PREFIX = "mars/telemetry/"
+
+
+def to_final_source_identifier(source: str | None) -> str | None:
+    if not source:
+        return source
+    return source[len(TELEMETRY_PREFIX):] if source.startswith(TELEMETRY_PREFIX) else source
+
 
 def evaluate_rules_against_measurement(event: dict, rules: list[dict]) -> list[dict]:
     """
@@ -62,7 +70,7 @@ def evaluate_rules_against_measurement(event: dict, rules: list[dict]) -> list[d
     """
     evaluations: list[dict] = []
 
-    source = event.get("source")
+    source = to_final_source_identifier(event.get("source"))
     readings = event.get("readings", [])
 
     if not source or not readings:
@@ -81,10 +89,10 @@ def evaluate_rules_against_measurement(event: dict, rules: list[dict]) -> list[d
 
     # Evaluate each rule
     for rule in rules:
-        rule_source = rule.get("sensor_source")
+        rule_source = to_final_source_identifier(rule.get("sensor_source"))
         rule_metric = rule.get("sensor_metric")
 
-        # Rule must match source
+        # Rule must match source (using final identifier only)
         if rule_source != source:
             continue
 

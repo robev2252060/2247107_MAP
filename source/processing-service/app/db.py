@@ -5,7 +5,15 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+TELEMETRY_PREFIX = "mars/telemetry/"
+
 _pool: asyncpg.Pool | None = None
+
+
+def to_final_source_identifier(source: str | None) -> str | None:
+    if not source:
+        return source
+    return source[len(TELEMETRY_PREFIX):] if source.startswith(TELEMETRY_PREFIX) else source
 
 
 async def get_pool() -> asyncpg.Pool:
@@ -26,8 +34,10 @@ async def get_pool() -> asyncpg.Pool:
 
 
 async def fetch_rules_for_source(sensor_source: str) -> list[dict]:
-    """Fetch all active rules matching the given sensor_source."""
+    """Fetch all active rules matching the given final sensor source identifier."""
     try:
+        final_source = to_final_source_identifier(sensor_source)
+
         pool = await get_pool()
         async with pool.acquire() as conn:
             rows = await conn.fetch(
@@ -37,15 +47,15 @@ async def fetch_rules_for_source(sensor_source: str) -> list[dict]:
                 WHERE sensor_source = $1 AND enabled = TRUE
                 ORDER BY created_at DESC
                 """,
-                sensor_source
+                final_source
             )
-        
+
         # Convert rows to dictionaries
         rules = []
         for row in rows:
             rules.append({
                 "id": row["id"],
-                "sensor_source": row["sensor_source"],
+                "sensor_source": to_final_source_identifier(row["sensor_source"]),
                 "sensor_metric": row["sensor_metric"],
                 "operator": row["operator"],
                 "threshold_value": float(row["threshold_value"]),
@@ -54,8 +64,8 @@ async def fetch_rules_for_source(sensor_source: str) -> list[dict]:
                 "enabled": row["enabled"],
                 "description": row["description"],
             })
-        
-        logger.debug(f"Fetched {len(rules)} active rules for source {sensor_source}")
+
+        logger.debug(f"Fetched {len(rules)} active rules for source {final_source}")
         return rules
     except Exception as e:
         logger.error(f"Error fetching rules for source {sensor_source}: {e}")

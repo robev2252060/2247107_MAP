@@ -1,5 +1,15 @@
+const TELEMETRY_PREFIX = "mars/telemetry/";
+
+function toFinalSourceIdentifier(source) {
+  if (!source) return source;
+  return source.startsWith(TELEMETRY_PREFIX)
+    ? source.slice(TELEMETRY_PREFIX.length)
+    : source;
+}
+
 export default function RuleItem({ rule, onDelete, onToggle }) {
-  const condition = `IF ${rule.sensor_source}.${rule.sensor_metric} ${rule.operator} ${rule.threshold_value}`;
+  const source = toFinalSourceIdentifier(rule.sensor_source);
+  const condition = `IF ${source}.${rule.sensor_metric} ${rule.operator} ${rule.threshold_value}`;
   const action    = `THEN set ${rule.target_actuator} to ${rule.target_state}`;
 
   return (

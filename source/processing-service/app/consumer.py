@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 from datetime import datetime, timezone
@@ -11,24 +10,38 @@ from app.kafka_producer import publish_actuator_state
 
 logger = logging.getLogger(__name__)
 
+TELEMETRY_PREFIX = "mars/telemetry/"
+
 # Track which rules are currently triggered: rule_id → bool
 _rule_active_state: dict[str, bool] = {}
+
+
+def to_final_source_identifier(source: str | None) -> str | None:
+    if not source:
+        return source
+    return source[len(TELEMETRY_PREFIX):] if source.startswith(TELEMETRY_PREFIX) else source
 
 
 async def process_measurement_event(event: dict) -> None:
     """
     Process a MeasurementEvent from Kafka:
-    1. Extract source from event
+    1. Normalize source to final identifier
     2. Fetch active rules for that source
     3. Evaluate rules against the event's readings
     4. Publish actuator states on transitions
     """
-    source = event.get("source")
+    source = to_final_source_identifier(event.get("source"))
     if not source:
         logger.debug("MeasurementEvent missing source, skipping")
         return
 
-    timestamp = event.get("timestamp", datetime.now(timezone.utc).isoformat())
+    # Ensure evaluation uses final source identifier only
+    normalized_event = {
+      **event,
+      "source": source,
+    }
+
+    timestamp = normalized_event.get("timestamp", datetime.now(timezone.utc).isoformat())
 
     # Fetch rules for this source
     rules = await fetch_rules_for_source(source)
@@ -36,7 +49,7 @@ async def process_measurement_event(event: dict) -> None:
         return
 
     # Evaluate rules
-    triggered_rules = evaluate_rules_against_measurement(event, rules)
+    triggered_rules = evaluate_rules_against_measurement(normalized_event, rules)
 
     # Process rule state transitions and publish actuator states
     for evaluation in triggered_rules:
@@ -49,7 +62,7 @@ async def process_measurement_event(event: dict) -> None:
             _rule_active_state[rule_id] = is_triggered
 
             logger.info(
-                "Rule %s %s: %s.%s=%s %s %s → %s=%s",
+                "Rule %s %s: %s.%s=%s %s %s -> %s=%s",
                 rule_id,
                 "triggered" if is_triggered else "cleared",
                 evaluation["sensor_source"],
@@ -82,7 +95,7 @@ async def consume_loop() -> None:
     )
 
     await consumer.start()
-    logger.info("MS-Automation consumer started — listening on %s", settings.kafka_measurements_topic)
+    logger.info("MS-Automation consumer started - listening on %s", settings.kafka_measurements_topic)
 
     try:
         async for msg in consumer:
