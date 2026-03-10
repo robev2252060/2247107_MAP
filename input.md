@@ -78,23 +78,26 @@ Field descriptions:
 - `value`: Metric value (numeric telemetry or string state).
 - `unit` (optional): Unit label when applicable (for example `C`, `%`, `ppm`).
 
-### ActuatorCommand
+### ActuatorState
 
-**Description:** Command payload used to request a target ON/OFF state for one actuator.
+**Description:** Represents the current or commanded ON/OFF state of a named actuator. Used both as a command payload (when sent to the actuator service) and as a state snapshot (when returned by the actuator list endpoint).
 
-Source: `booklets/openapi/ms-actuator.yaml` (`POST /actuators/{actuator_id}` request body)
+Source: `booklets/openapi/components.yaml#/components/schemas/ActuatorState`
 
 ```json
 {
+  "actuator": "<string>",
   "state": "ON | OFF"
 }
 ```
 
 Required fields:
+- `actuator` (string)
 - `state` (enum: `ON`, `OFF`)
 
 Field descriptions:
-- `state`: Desired final actuator state (`ON` activates, `OFF` deactivates).
+- `actuator`: Identifier of the target actuator (for example `cooling_fan`, `main_vent`).
+- `state`: Desired or current actuator state (`ON` activates, `OFF` deactivates).
 
 ### AutomationRule
 
