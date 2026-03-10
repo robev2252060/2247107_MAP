@@ -1,0 +1,15 @@
+openapi: 3.0.3
+
+info:
+  title: Mars MS-Automation API
+  version: 1.0.0
+  description: API for the Automation Microservice runtime endpoints.
+
+paths:
+
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy.

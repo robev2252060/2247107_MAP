@@ -1,0 +1,49 @@
+asyncapi: 2.6.0
+info:
+  title: Mars Automation Platform AsyncAPI Components
+  version: 1.0.0
+  description: Shared message and schema components for MAP AsyncAPI specifications.
+
+components:
+  messages:
+
+    MeasurementEventMessage:
+      name: MeasurementEventMessage
+      title: MeasurementEvent
+      summary: Batched homogeneous measurement event emitted by sensors.
+      payload:
+        $ref: '../openapi/components.yaml#/components/schemas/MeasurementEvent'
+
+    SseMeasurementEvent:
+      name: measurement
+      title: SSE Measurement Event
+      summary: Server-Sent Event frame containing a MeasurementEvent payload.
+      payload:
+        $ref: '../openapi/components.yaml#/components/schemas/MeasurementEvent'
+
+    ActuatorAutomationCommand:
+      name: ActuatorAutomationCommand
+      title: Actuator Automation Command
+      summary: Command payload for driving actuator state transitions.
+      payload:
+        type: object
+        required:
+          - actuator
+          - state
+        properties:
+          actuator:
+            type: string
+            description: Target actuator identifier.
+            example: cooling_fan
+          state:
+            $ref: '../openapi/components.yaml#/components/schemas/ActuatorState/properties/state'
+          triggered_by_rule:
+            type: string
+            description: Rule identifier that triggered this command.
+            example: "42"
+          timestamp:
+            type: string
+            format: date-time
+            description: Publish timestamp of the command.
+            example: "2026-03-10T14:32:00Z"
+

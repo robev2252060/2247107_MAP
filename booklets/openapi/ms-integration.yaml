@@ -3,7 +3,7 @@ openapi: 3.0.3
 info:
   title: MAP ms-integration API
   version: 1.0.0
-  description: API for the Integration microservice. Publishes normalized Measurevents Events via SSE.
+  description: API for the Integration microservice. Publishes normalized MeasurementEvents via SSE.
 
 paths:
 

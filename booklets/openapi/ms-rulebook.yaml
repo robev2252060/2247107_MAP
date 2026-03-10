@@ -7,7 +7,26 @@ info:
 
 paths:
 
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy.
+
   /api/rules:
+
+    get:
+      summary: List automation rules
+      responses:
+        '200':
+          description: Rules retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './components.yaml#/components/schemas/AutomationRule'
 
     post:
       summary: Create a new automation rule
@@ -24,6 +43,24 @@ paths:
 
   /api/rules/{id}:
 
+    get:
+      summary: Get an automation rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rule retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: './components.yaml#/components/schemas/AutomationRule'
+        '404':
+          description: Rule not found.
+
     put:
       summary: Update an existing automation rule
       description: Modifies an existing rule (e.g., changing the threshold value or target state).
@@ -33,7 +70,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       requestBody:
         required: true
         content:
@@ -55,7 +91,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       responses:
         '204':
           description: Rule successfully deleted.

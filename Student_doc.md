@@ -89,5 +89,3 @@ All values have sensible defaults and are overridable via `docker-compose.yml`.
 | `SIMULATOR_BASE_URL` | ingestion, actuator | `http://simulator:8080` |
 | `KAFKA_BOOTSTRAP_SERVERS` | all | `kafka:29092` |
 | `POLL_INTERVAL_SECONDS` | ingestion | `5` |
-| `MONGODB_URI` | processing, rule | `mongodb://mongodb:27017` |
-| `MONGODB_DB` | processing, rule | `mars_iot` |

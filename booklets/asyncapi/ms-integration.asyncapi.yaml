@@ -1,0 +1,37 @@
+asyncapi: 2.6.0
+info:
+  title: Mars MS-Integration AsyncAPI
+  version: 1.0.0
+  description: Async contracts owned by ms-integration.
+
+defaultContentType: application/json
+
+servers:
+
+  kafka:
+    url: kafka:9092
+    protocol: kafka
+    description: Kafka broker on the Docker network.
+
+  http:
+    url: localhost:80
+    protocol: http
+    description: Public API gateway endpoint for SSE clients.
+
+channels:
+
+  measurements:
+    description: Normalized measurement batches emitted by ms-integration.
+    publish:
+      summary: Publish MeasurementEvent to Kafka for downstream automation.
+      operationId: publishMeasurements
+      message:
+        $ref: './components.asyncapi.yaml#/components/messages/MeasurementEventMessage'
+
+  /api/sensors/stream:
+    description: SSE stream produced by ms-integration.
+    publish:
+      summary: Push MeasurementEvent frames to SSE subscribers.
+      operationId: publishSensorSseMeasurements
+      message:
+        $ref: './components.asyncapi.yaml#/components/messages/SseMeasurementEvent'

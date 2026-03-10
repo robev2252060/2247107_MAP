@@ -1,0 +1,32 @@
+asyncapi: 2.6.0
+info:
+  title: Mars MS-Automation AsyncAPI
+  version: 1.0.0
+  description: Async contracts owned by ms-automation.
+
+defaultContentType: application/json
+
+servers:
+
+  kafka:
+    url: kafka:9092
+    protocol: kafka
+    description: Kafka broker on the Docker network.
+
+channels:
+
+  measurements:
+    description: Normalized MeasurementEvent stream consumed for rule evaluation.
+    subscribe:
+      summary: Consume MeasurementEvent from ms-integration.
+      operationId: consumeMeasurements
+      message:
+        $ref: './components.asyncapi.yaml#/components/messages/MeasurementEventMessage'
+
+  actuators.automation:
+    description: Actuator automation commands emitted by ms-automation.
+    publish:
+      summary: Publish actuator state commands for ms-actuators.
+      operationId: publishAutomationCommands
+      message:
+        $ref: './components.asyncapi.yaml#/components/messages/ActuatorAutomationCommand'

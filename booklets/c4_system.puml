@@ -1,0 +1,17 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title MAP - C4 System Context Diagram
+
+Person(operator, "Habitat Operator", "An operator monitoring the mars habitat, managing automation rules, and manually controlling actuators via the dashboard.")
+
+System(map, "Mars Automation Platform", "Ingests heterogeneous sensor data, normalizes it, evaluates automation rules, and provides a real-time monitoring dashboard.")
+
+System_Ext(simulator, "Mars IoT Simulator", "Provided external container simulating REST sensors, telemetry streams, and habitat actuators.")
+
+Rel(operator, map, "Monitors habitat, manages rules, and toggles actuators", "HTTPS/SSE")
+Rel_R(map, simulator, "Polls REST sensors, subscribes to telemetry, and sends actuator commands", "HTTP/SSE")
+Rel_L(simulator, map, "Streams telemetry and sensor states", "HTTP/SSE")
+
+SHOW_LEGEND()
+@enduml
