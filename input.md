@@ -17,7 +17,7 @@ placed on the `mars.normalized.events` Kafka topic.
 }
 ```
 
-### Field definitions
+### Field Definitions
 
 | Field | Type | Description |
 |---|---|---|
@@ -29,7 +29,7 @@ placed on the `mars.normalized.events` Kafka topic.
 | `unit` | string \| null | SI unit (e.g. `°C`, `%`, `µg/m³`); null when not applicable |
 | `raw` | object | Verbatim original payload from the simulator — never modified |
 
-### Sensor → schema family mapping
+### Sensor → Schema Family Mapping
 
 | Sensor ID | Schema Family |
 |---|---|
@@ -92,13 +92,13 @@ Example rule encoding:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Public: port 80                          │
-│                         Nginx Gateway                            │
+│                         Public: port 80                         │
+│                         Nginx Gateway                           │
 │  /api/state/*  →  state-service:8002                            │
 │  /api/rules/*  →  rule-service:8003                             │
 │  /api/actuators/* → actuator-service:8004                       │
-│  /             →  frontend:3000                                  │
-└──────┬───────────────────────────────┬───────────────────────────┘
+│  /             →  frontend:3000                                 │
+└──────┬───────────────────────────────┬──────────────────────────┘
        │                               │
   ┌────▼──────┐               ┌────────▼───────┐
   │ frontend  │               │  state-service │◄──── SSE push
@@ -111,14 +111,14 @@ Example rule encoding:
                               │ processing-svc  │──► mars.actuator.commands
                               │ normalise +     │
                               │ rule engine     │◄── MongoDB (rules)
-                              └────────────────┘
+                              └─────────────────┘
                                        ▲
                                mars.raw.sensors
                                        │
                               ┌────────┴────────┐
                               │ ingestion-svc   │
                               │ REST polling    │
-                              └────────────────┘
+                              └─────────────────┘
                                        │
                               ┌────────▼────────┐
                               │   Simulator     │
@@ -132,8 +132,41 @@ Example rule encoding:
   └────────────────┘
   (also: manual REST from frontend)
 
-  ┌─────────────────┐    ┌─────────────┐
-  │     Kafka        │    │  MongoDB    │
-  │  (+ Zookeeper)   │    │  rules col. │
-  └─────────────────┘    └─────────────┘
+  ┌─────────────────┐
+  │     Kafka       │
+  └─────────────────┘
 ```
+
+
+## 5. User stories
+
+#### Dashboard & Monitoring (Data Presentation)
+> 1. Centralized Dashboard: As an Operator, I want to view a centralized dashboard of all habitat sensors so that I can monitor the overall health of the Mars base.
+> 2. Instant Sensor Readings: As an Operator, I want to see the most recent reading from each sensor instantly upon opening the dashboard so that I don't have to wait for the next data broadcast.
+> 3. Real-Time Telemetry Updates: As an Operator, I want sensor data to update automatically on my screen without refreshing so that I am always looking at live, real-time telemetry.
+> 4. Standardized Data Units: As an Operator, I want to see standardized units and naming conventions for all data, regardless of which device it came from, so I don't misinterpret critical life-support metrics.
+> 5. Live Line Charts: As an Operator, I want to view a live line chart for selected sensors (e.g., greenhouse temperature) while the page is open so that I can visually track rapid environmental trends.
+> 6. Operational Domain Grouping: As an Operator, I want sensors to be grouped by their operational domain (e.g., Thermal, Power, Air Quality) so that I can quickly find related metrics during an emergency.
+> 7. Last Data Point Timestamp: As an Operator, I want the dashboard to display the exact time the last data point was received so that I know if a sensor has gone offline.
+> 8. Stale Data Indicator: As an Operator, I want a visual indicator if a sensor's displayed data is older than 5 minutes, so I don't mistakenly trust stale telemetry.
+
+#### System Configuration & Actuator Monitoring
+> 9. Global Polling Frequency Configuration: As a Habitat Administrator, I want to configure the global polling frequency for legacy (polled) sensors, so that I can balance system network load with the need for highly responsive dashboard updates.
+> 10. Manual Actuator State Refresh: As an Operator, I want to manually trigger a refresh of all actuator states via a dashboard button, so that I can immediately verify their true physical status without waiting for the next system polling cycle.
+
+#### Automation Rule Management (CRUD)
+> 11. Rule Creation via Sentence Format: As an Automation Engineer, I want to create new rules using a simple sentence format (IF sensor operator value THEN actuator state) so that I can easily script habitat behavior.
+> 12. Predefined Lists for Rule Creation: As an Automation Engineer, I want to select sensors and actuators from predefined lists when creating a rule so that I avoid fatal typing errors.
+> 13. Mathematical Operators for Rules: As an Automation Engineer, I want to define rule conditions using standard mathematical operators (<, <=, =, >, >=) so that I can set precise environmental thresholds.
+> 14. Active Rules Audit List: As an Automation Engineer, I want to view a list of all currently active rules so that I can audit the habitat's automated logic.
+> 15. Delete Automation Rules: As an Automation Engineer, I want to delete automation rules so that I can remove outdated or dangerous logic from the system.
+> 16. Edit Existing Rules: As an Automation Engineer, I want to edit existing rules so that I can adjust thresholds (e.g., lowering the heater trigger) as the Martian seasons change.
+> 17. Toggle Automation Rules: As an Automation Engineer, I want to temporarily disable and re-enable specific automation rules without deleting them, so that I can perform maintenance on a sensor without triggering false hardware activations.
+
+#### System Resilience & Backend Value
+> 18. Persistent Rule Storage: As a Habitat Administrator, I want my automation rules to be permanently saved so that they survive a system crash or power cycle.
+> 19. Seamless Data Ingestion Display: As an Operator, I want the dashboard to display data from all habitat sensors regardless of their transmission method (polling vs. streaming), so that no part of the habitat goes unmonitored.
+> 20. Instant Rule Evaluation: As an Operator, I want the system to evaluate my rules the exact instant new sensor data arrives so that life-saving equipment activates immediately.
+> 21. Decoupled Dashboard Responsiveness: As an Operator, I want the monitoring dashboard to remain live and responsive even if the automated rule system goes offline, so that I can still manually monitor life-support conditions.
+> 22. Out-of-Bounds Visual Alerts: As an Operator, I want to receive a visual alert on the UI if a sensor reads out of normal bounds, even before a rule triggers, so I have early warning of thermodynamic consequences.
+> 23. System Connection Indicator: As an Operator, I want a global "System Connection" indicator on the dashboard (Green/Red), so that I know immediately if the UI has lost its WebSocket/SSE connection to the backend broker.

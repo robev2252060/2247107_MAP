@@ -19,9 +19,7 @@ Also the docker-compose should probably be inside source.
 
 
 All of the services are defined in docker_compose with the following names:
-- zookeeper (Distributed systems coordinatior)
 - kafka (Message broker)
-- mongodb 
 - simulator (mars-iot-simulator-oci.tar)
 - ingestion-service
 - processing-service
@@ -51,7 +49,3 @@ For restart, first run:
 
 
 Any changes can be made through refactoring the corresponding files of the service and the docker_compose itself, and adding dependencies through requirements.txt
-
-
-
-
