@@ -32,3 +32,107 @@ The platform is mission-critical: it supports environmental awareness and rapid 
 22) As an Operator, I want a visual alert when a sensor is out of normal bounds even before a rule fires so that I get early warning.
 23) As an Operator, I want a global system connection indicator (Green/Red) so that I immediately know if the UI has lost backend stream connectivity.
 24) As an Operator, I want to be notified with a toast whenever an automated rule changes the state of an actuator, so that I know immediately what's going on in my habitat.
+
+## Standard Models
+
+The following schemas are the canonical contracts used across MAP services.
+
+### MeasurementEvent
+
+**Description:** Standard event envelope for telemetry/state updates emitted by integration and actuator streams. It represents one source at one timestamp, with one or more measured metrics.
+
+Source: `booklets/openapi/components.yaml#/components/schemas/MeasurementEvent`
+
+```json
+{
+  "timestamp": "<ISO-8601 date-time>",
+  "source": "<string>",
+  "status": "ok | warning",
+  "readings": [
+    {
+      "metric": "<string>",
+      "value": "<number | string>",
+      "unit": "<string>"
+    }
+  ]
+}
+```
+
+Required fields:
+- `timestamp` (string, date-time)
+- `source` (string)
+- `readings` (array, min 1)
+
+Field descriptions:
+- `timestamp`: Time when this batch of readings was captured/generated.
+- `source`: Origin of the event (sensor id, stream source, or actuator id).
+- `status` (optional): Health hint for the source at that moment (`ok` or `warning`).
+- `readings`: List of metrics observed at the same timestamp.
+
+`readings[]` item (`Measurement`) required fields:
+- `metric` (string)
+- `value` (number or string)
+
+`readings[]` field descriptions:
+- `metric`: Metric name (for example `temperature`, `state`, `voltage_v`).
+- `value`: Metric value (numeric telemetry or string state).
+- `unit` (optional): Unit label when applicable (for example `C`, `%`, `ppm`).
+
+### ActuatorState
+
+**Description:** Represents the current or commanded ON/OFF state of a named actuator. Used both as a command payload (when sent to the actuator service) and as a state snapshot (when returned by the actuator list endpoint).
+
+Source: `booklets/openapi/components.yaml#/components/schemas/ActuatorState`
+
+```json
+{
+  "actuator": "<string>",
+  "state": "ON | OFF"
+}
+```
+
+Required fields:
+- `actuator` (string)
+- `state` (enum: `ON`, `OFF`)
+
+Field descriptions:
+- `actuator`: Identifier of the target actuator (for example `cooling_fan`, `main_vent`).
+- `state`: Desired or current actuator state (`ON` activates, `OFF` deactivates).
+
+### AutomationRule
+
+**Description:** Rule definition used by the automation engine to evaluate incoming measurements and generate actuator commands when conditions are met.
+
+Canonical schema source: `booklets/openapi/components.yaml#/components/schemas/AutomationRule`
+
+```json
+{
+  "id": "<uuid>",
+  "sensor_source": "<string>",
+  "sensor_metric": "<string>",
+  "operator": "< | <= | = | > | >=",
+  "threshold_value": "<number>",
+  "target_actuator": "<string>",
+  "target_state": "ON | OFF"
+}
+```
+
+Required fields:
+- `sensor_source` (string)
+- `sensor_metric` (string)
+- `operator` (enum: `<`, `<=`, `=`, `>`, `>=`)
+- `threshold_value` (number)
+- `target_actuator` (string)
+- `target_state` (enum: `ON`, `OFF`)
+
+Field descriptions:
+- `id` (read-only): Unique rule identifier assigned by the system.
+- `sensor_source`: Source to monitor (for example a specific sensor stream/source id).
+- `sensor_metric`: Metric within that source to evaluate.
+- `operator`: Comparison operator applied to the metric value.
+- `threshold_value`: Numeric threshold used in the comparison.
+- `target_actuator`: Actuator to control when the condition is true.
+- `target_state`: Actuator state to apply when triggered.
+
+Optional/read-only field:
+- `id` (string, uuid, read-only)
