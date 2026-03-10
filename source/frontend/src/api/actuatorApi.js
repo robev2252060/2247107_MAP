@@ -41,8 +41,27 @@ export async function setActuatorState(actuatorId, state) {
     throw new Error(
       `Failed to set actuator ${actuatorId} (${res.status}${
         errText ? ` – ${errText}` : ""}
-      })`
+      )`
     );
   }
   return res.json();
+}
+
+/**
+ * Streams actuator state changes as MeasurementEvent SSE.
+ * @param {(event: object) => void} onMeasurement
+ * @returns {EventSource}
+ */
+export function openActuatorStream(onMeasurement) {
+  const es = new EventSource(`${BASE}/stream`);
+
+  es.addEventListener("measurement", (e) => {
+    onMeasurement(JSON.parse(e.data));
+  });
+
+  es.onerror = (err) => {
+    console.error("Actuator SSE error:", err);
+  };
+
+  return es;
 }

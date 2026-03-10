@@ -1,10 +1,29 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchActuators, setActuatorState } from "../api/actuatorApi.js";
+import { fetchActuators, openActuatorStream, setActuatorState } from "../api/actuatorApi.js";
 import ActuatorPanel from "../components/Actuators/ActuatorPanel.jsx";
+
+function applyMeasurement(prev, event) {
+  const actuatorId = event?.source;
+  const stateReading = (event?.readings || []).find((r) => r.metric === "state");
+  const newState = stateReading?.value;
+
+  if (!actuatorId || (newState !== "ON" && newState !== "OFF")) {
+    return prev;
+  }
+
+  const idx = prev.findIndex((a) => a.actuator_name === actuatorId);
+  if (idx === -1) {
+    return [...prev, { actuator_name: actuatorId, state: newState }];
+  }
+
+  return prev.map((a) =>
+    a.actuator_name === actuatorId ? { ...a, state: newState } : a
+  );
+}
 
 export default function ActuatorsPage() {
   const [actuators, setActuators] = useState([]);
-  const [error, setError]         = useState(null);
+  const [error, setError] = useState(null);
 
   const loadActuators = useCallback(async () => {
     try {
@@ -16,11 +35,18 @@ export default function ActuatorsPage() {
     }
   }, []);
 
-  // Initial load + poll every 5 s to reflect rule-triggered state changes
   useEffect(() => {
     loadActuators();
-    const id = setInterval(loadActuators, 5000);
-    return () => clearInterval(id);
+
+    const es = openActuatorStream((event) => {
+      setActuators((prev) => applyMeasurement(prev, event));
+    });
+
+    es.onerror = () => {
+      setError("Lost actuator stream connection - retrying...");
+    };
+
+    return () => es.close();
   }, [loadActuators]);
 
   async function handleToggle(actuatorId, newState) {
@@ -28,7 +54,7 @@ export default function ActuatorsPage() {
       await setActuatorState(actuatorId, newState);
       setActuators((prev) =>
         prev.map((a) =>
-          (a.actuator_name) === actuatorId ? { ...a, state: newState } : a
+          a.actuator_name === actuatorId ? { ...a, state: newState } : a
         )
       );
     } catch (err) {
