@@ -12,6 +12,7 @@ Available actuators (from spec § 3.4):
 """
 
 import logging
+from datetime import datetime, timezone
 from typing import Literal
 
 import httpx
@@ -28,8 +29,28 @@ KNOWN_ACTUATORS = {
     "habitat_heater",
 }
 
-# In-memory cache of last-known actuator states
-_actuator_state_cache: dict[str, str] = {}
+# In-memory cache of last-known actuator states and update timestamps
+_actuator_state_cache: dict[str, dict[str, str]] = {}
+
+
+def _iso_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _cache_state(actuator_id: str, state: str, timestamp: str | None = None) -> None:
+    _actuator_state_cache[actuator_id] = {
+        "state": state,
+        "updated_at": timestamp or _iso_now(),
+    }
+
+
+def _normalize_state(raw_state) -> str:
+    """Normalize simulator state values to canonical 'ON' / 'OFF' strings."""
+    if isinstance(raw_state, bool):
+        return "ON" if raw_state else "OFF"
+    if isinstance(raw_state, str):
+        return "ON" if raw_state.upper() == "ON" else "OFF"
+    return "OFF"
 
 
 async def set_actuator_state(
@@ -51,18 +72,9 @@ async def set_actuator_state(
         response.raise_for_status()
         result = response.json()
 
-    _actuator_state_cache[actuator_id] = state
+    _cache_state(actuator_id, state)
     logger.info("Actuator %s set to %s", actuator_id, state)
     return result
-
-
-def _normalize_state(raw_state) -> str:
-    """Normalize simulator state values to canonical 'ON' / 'OFF' strings."""
-    if isinstance(raw_state, bool):
-        return "ON" if raw_state else "OFF"
-    if isinstance(raw_state, str):
-        return "ON" if raw_state.upper() == "ON" else "OFF"
-    return "OFF"
 
 
 async def get_all_actuators() -> list[dict]:
@@ -72,8 +84,15 @@ async def get_all_actuators() -> list[dict]:
         response = await client.get(url, timeout=5.0)
         response.raise_for_status()
         data = response.json()
-        # Transform to list of dicts, normalising state to "ON" / "OFF"
-        return [
-            {"actuator_name": actuator_id, "state": _normalize_state(state)}
-            for actuator_id, state in data["actuators"].items()
-        ]
+
+    actuators: list[dict] = []
+    for actuator_id, raw_state in data["actuators"].items():
+        normalized_state = _normalize_state(raw_state)
+        _cache_state(actuator_id, normalized_state)
+        actuators.append({
+            "actuator_name": actuator_id,
+            "state": normalized_state,
+            "updated_at": _actuator_state_cache[actuator_id]["updated_at"],
+        })
+
+    return actuators

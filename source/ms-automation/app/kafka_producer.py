@@ -5,10 +5,6 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-TOPIC_NORMALIZED_EVENTS  = "mars.normalized.events"
-TOPIC_ACTUATOR_COMMANDS  = "mars.actuator.commands"
-TOPIC_RULE_EVENTS        = "mars.rule.events"
-
 _producer: AIOKafkaProducer | None = None
 
 
@@ -21,7 +17,7 @@ async def get_producer() -> AIOKafkaProducer:
             key_serializer=lambda k: k.encode("utf-8") if k else None,
         )
         await _producer.start()
-        logger.info("Kafka producer started (processing-service)")
+        logger.info("Kafka producer started (ms-automation)")
     return _producer
 
 
@@ -30,18 +26,25 @@ async def stop_producer() -> None:
     if _producer is not None:
         await _producer.stop()
         _producer = None
+        logger.info("Kafka producer stopped")
 
 
-async def publish_normalized_event(event: dict) -> None:
+async def publish_actuator_state(state: dict) -> None:
+    """
+    Publish actuator state to actuators.automation topic.
+
+    Expected state dict:
+    {
+        "actuator": str,
+        "state": str ("ON" | "OFF"),
+        "triggered_by_rule": str,
+        "timestamp": str
+    }
+    """
     producer = await get_producer()
-    await producer.send(TOPIC_NORMALIZED_EVENTS, key=event["sensor_id"], value=event)
-
-
-async def publish_actuator_command(command: dict) -> None:
-    producer = await get_producer()
-    await producer.send(TOPIC_ACTUATOR_COMMANDS, key=command["actuator_id"], value=command)
-
-
-async def publish_rule_event(event: dict) -> None:
-    producer = await get_producer()
-    await producer.send(TOPIC_RULE_EVENTS, key=event["rule_id"], value=event)
+    await producer.send(
+        settings.kafka_actuators_topic,
+        key=state.get("actuator"),
+        value=state
+    )
+    logger.debug(f"Published actuator state: {state['actuator']}={state['state']}")

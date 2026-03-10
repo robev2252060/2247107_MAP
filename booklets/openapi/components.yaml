@@ -58,6 +58,7 @@ components:
       type: object
       required:
         - sensor_source
+        - sensor_metric
         - operator
         - threshold_value
         - target_actuator
@@ -71,6 +72,9 @@ components:
         sensor_source:
           type: string
           example: "greenhouse_temperature"
+        sensor_metric:
+          type: string
+          example: "temperature_c"
         operator:
           type: string
           enum: [ '<', '<=', '=', '>', '>=' ]
@@ -86,3 +90,16 @@ components:
           enum: [ 'ON', 'OFF' ]
           example: "ON"
 
+    ActuatorState:
+      type: object
+      required:
+        - actuator
+        - state
+      properties:
+        actuator:
+          type: string
+          example: "cooling_fan"
+        state:
+          type: string
+          enum: [ 'ON', 'OFF' ]
+          example: "OFF"

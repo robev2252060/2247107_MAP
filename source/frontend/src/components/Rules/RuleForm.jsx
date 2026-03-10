@@ -1,10 +1,4 @@
-import { useState } from "react";
-
-const SENSORS = [
-  "greenhouse_temperature", "entrance_humidity", "co2_hall",
-  "hydroponic_ph", "water_tank_level", "corridor_pressure",
-  "air_quality_pm25", "air_quality_voc",
-];
+import { useEffect, useMemo, useState } from "react";
 
 const ACTUATORS = [
   "cooling_fan", "entrance_humidifier",
@@ -14,18 +8,49 @@ const ACTUATORS = [
 const OPERATORS = ["<", "<=", "=", ">=", ">"];
 
 const EMPTY = {
-  sensor_id: SENSORS[0],
+  sensor_source: "",
+  sensor_metric: "",
   operator: ">",
-  threshold: "",
-  unit: "",
-  actuator_id: ACTUATORS[0],
-  actuator_state: "ON",
+  threshold_value: "",
+  target_actuator: ACTUATORS[0],
+  target_state: "ON",
   description: "",
 };
 
-export default function RuleForm({ onSubmit, loading }) {
+export default function RuleForm({ onSubmit, loading, sourceMetrics }) {
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState(null);
+
+  const sensorSources = useMemo(
+    () => Object.keys(sourceMetrics || {}).sort((a, b) => a.localeCompare(b)),
+    [sourceMetrics]
+  );
+
+  const availableMetrics = useMemo(
+    () => (sourceMetrics?.[form.sensor_source] || []).slice().sort((a, b) => a.localeCompare(b)),
+    [sourceMetrics, form.sensor_source]
+  );
+
+  useEffect(() => {
+    if (sensorSources.length === 0) {
+      if (form.sensor_source || form.sensor_metric) {
+        setForm((prev) => ({ ...prev, sensor_source: "", sensor_metric: "" }));
+      }
+      return;
+    }
+
+    if (!sensorSources.includes(form.sensor_source)) {
+      const nextSource = sensorSources[0];
+      const nextMetric = (sourceMetrics?.[nextSource] || [])[0] || "";
+      setForm((prev) => ({ ...prev, sensor_source: nextSource, sensor_metric: nextMetric }));
+      return;
+    }
+
+    const metricsForSource = sourceMetrics?.[form.sensor_source] || [];
+    if (!metricsForSource.includes(form.sensor_metric)) {
+      setForm((prev) => ({ ...prev, sensor_metric: metricsForSource[0] || "" }));
+    }
+  }, [sensorSources, sourceMetrics, form.sensor_source, form.sensor_metric]);
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -35,19 +60,37 @@ export default function RuleForm({ onSubmit, loading }) {
     e.preventDefault();
     setError(null);
 
-    if (!form.threshold || isNaN(Number(form.threshold))) {
-      setError("Threshold must be a valid number.");
+    if (!form.sensor_source) {
+      setError("Sensor source is required.");
+      return;
+    }
+
+    if (!form.sensor_metric.trim()) {
+      setError("Metric is required.");
+      return;
+    }
+
+    if (!form.threshold_value || isNaN(Number(form.threshold_value))) {
+      setError("Threshold value must be a valid number.");
       return;
     }
 
     try {
       await onSubmit({
-        ...form,
-        threshold: Number(form.threshold),
-        unit: form.unit || null,
+        sensor_source: form.sensor_source,
+        sensor_metric: form.sensor_metric.trim(),
+        operator: form.operator,
+        threshold_value: Number(form.threshold_value),
+        target_actuator: form.target_actuator,
+        target_state: form.target_state,
+        enabled: true,
         description: form.description || null,
       });
-      setForm(EMPTY);
+      setForm((prev) => ({
+        ...EMPTY,
+        sensor_source: prev.sensor_source,
+        sensor_metric: prev.sensor_metric,
+      }));
     } catch (err) {
       setError(err.message);
     }
@@ -60,9 +103,26 @@ export default function RuleForm({ onSubmit, loading }) {
       {error && <div className="rule-form__error">{error}</div>}
 
       <div className="rule-form__row">
-        <label>Sensor</label>
-        <select name="sensor_id" value={form.sensor_id} onChange={handleChange}>
-          {SENSORS.map((s) => <option key={s} value={s}>{s}</option>)}
+        <label>Sensor Source</label>
+        <select name="sensor_source" value={form.sensor_source} onChange={handleChange} disabled={sensorSources.length === 0}>
+          {sensorSources.length === 0 ? (
+            <option value="">Waiting for live measurements...</option>
+          ) : (
+            sensorSources.map((s) => <option key={s} value={s}>{s}</option>)
+          )}
+        </select>
+      </div>
+
+      <div className="rule-form__row">
+        <label>Metric</label>
+        <select name="sensor_metric" value={form.sensor_metric} onChange={handleChange} disabled={availableMetrics.length === 0}>
+          {availableMetrics.length === 0 ? (
+            <option value="">No metrics available</option>
+          ) : (
+            availableMetrics.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))
+          )}
         </select>
       </div>
 
@@ -77,8 +137,9 @@ export default function RuleForm({ onSubmit, loading }) {
         <label>Threshold</label>
         <input
           type="number"
-          name="threshold"
-          value={form.threshold}
+          step="any"
+          name="threshold_value"
+          value={form.threshold_value}
           onChange={handleChange}
           placeholder="e.g. 28"
           required
@@ -86,26 +147,15 @@ export default function RuleForm({ onSubmit, loading }) {
       </div>
 
       <div className="rule-form__row">
-        <label>Unit (optional)</label>
-        <input
-          type="text"
-          name="unit"
-          value={form.unit}
-          onChange={handleChange}
-          placeholder="e.g. °C"
-        />
-      </div>
-
-      <div className="rule-form__row">
         <label>Actuator</label>
-        <select name="actuator_id" value={form.actuator_id} onChange={handleChange}>
+        <select name="target_actuator" value={form.target_actuator} onChange={handleChange}>
           {ACTUATORS.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
       </div>
 
       <div className="rule-form__row">
         <label>Set to</label>
-        <select name="actuator_state" value={form.actuator_state} onChange={handleChange}>
+        <select name="target_state" value={form.target_state} onChange={handleChange}>
           <option value="ON">ON</option>
           <option value="OFF">OFF</option>
         </select>
@@ -122,8 +172,8 @@ export default function RuleForm({ onSubmit, loading }) {
         />
       </div>
 
-      <button className="btn btn--primary" type="submit" disabled={loading}>
-        {loading ? "Saving…" : "Add Rule"}
+      <button className="btn btn--primary" type="submit" disabled={loading || sensorSources.length === 0 || availableMetrics.length === 0}>
+        {loading ? "Saving..." : "Add Rule"}
       </button>
     </form>
   );

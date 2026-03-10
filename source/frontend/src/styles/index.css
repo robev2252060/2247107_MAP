@@ -260,6 +260,11 @@ body {
 
 .rule-item--disabled { opacity: 0.45; }
 
+.rule-item--edit {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .rule-item__body { display: flex; flex-direction: column; gap: 4px; }
 
 .rule-item__condition { color: var(--color-primary); font-size: 0.85rem; }
@@ -267,6 +272,47 @@ body {
 .rule-item__desc      { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; }
 
 .rule-item__actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+.rule-item__edit-form {
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.rule-item__edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  max-width: 150px;
+}
+
+.rule-item__edit-field label {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.rule-item__edit-field input {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.rule-item__edit-field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.rule-item__edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
 
 /* ---- Rule Form ---- */
 .rule-form {
@@ -316,7 +362,23 @@ body {
 .actuator-toggle--off { border-color: var(--color-border); }
 
 .actuator-toggle__icon  { font-size: 1.8rem; }
-.actuator-toggle__label { flex: 1; font-weight: 500; text-transform: capitalize; }
+
+.actuator-toggle__meta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.actuator-toggle__label {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.actuator-toggle__ts {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
 
 /* ---- Buttons ---- */
 .btn {

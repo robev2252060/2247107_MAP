@@ -1,26 +1,13 @@
 openapi: 3.0.3
 
 info:
-  title: Mars MS-Automation API
+  title: Mars MS-Rulebook API
   version: 1.0.0
-  description: API for the Automation Microservice. Manages CRUD for automation rules and streams actuator state events via SSE.
+  description: API for the Rulebook Microservice. Manages CRUD for automation rules.
 
 paths:
 
-  /api/v1/actuators/stream:
-
-    get:
-      summary: Stream actuator state events
-      description: Establishes a Server-Sent Events (SSE) connection to stream actuator state changes to the frontend dashboard.
-      responses:
-        '200':
-          description: SSE stream connected successfully.
-          content:
-            text/event-stream:
-              schema:
-                $ref: './components.yaml#/components/schemas/MeasurementEvent'
-
-  /api/v1/rules:
+  /api/rules:
 
     post:
       summary: Create a new automation rule
@@ -35,7 +22,7 @@ paths:
         '201':
           description: Rule successfully created.
 
-  /api/v1/rules/{id}:
+  /api/rules/{id}:
 
     put:
       summary: Update an existing automation rule

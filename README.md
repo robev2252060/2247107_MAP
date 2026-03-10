@@ -39,9 +39,11 @@ Deployment:
 Access through: http://localhost:80
 
 PostgreSQL bootstrap:
-- Schema init scripts are loaded from `source/postgres`.
-- Init scripts under `/docker-entrypoint-initdb.d` run only when the `postgres-data` volume is empty.
-- If you need to re-run schema bootstrap, remove containers and volumes first.
+- Schema init script is in `source/postgres/01-init-schema.sql`.
+- Single clean schema (127 lines) based on components.yaml spec.
+- Creates 3 tables: rules, rule_executions, schema_version.
+- Init scripts run only when the `postgres-data` volume is empty (fresh install).
+- For clean reinstall: `docker compose down -v` then `docker compose up -d --build`.
 
 For restart, first run:
 `docker compose down -v`

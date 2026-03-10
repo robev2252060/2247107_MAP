@@ -24,11 +24,14 @@ export async function createRule(data) {
 
 export async function updateRule(ruleId, data) {
   const res = await fetch(`${BASE}/${ruleId}`, {
-    method: "PATCH",
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error(`Failed to update rule ${ruleId}`);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || `Failed to update rule ${ruleId}`);
+  }
   return res.json();
 }
 

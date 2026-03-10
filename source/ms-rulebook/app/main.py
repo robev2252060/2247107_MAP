@@ -42,7 +42,7 @@ async def startup_event():
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "rule-service"}
+    return {"status": "ok", "service": "ms-rulebook"}
 
 
 if __name__ == "__main__":

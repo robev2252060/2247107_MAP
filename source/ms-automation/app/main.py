@@ -14,12 +14,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Mars IoT — Processing Service", version="1.0.0")
+app = FastAPI(title="Mars IoT — MS-Automation", version="1.0.0")
 
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "processing-service"}
+    return {"status": "ok", "service": "ms-automation"}
 
 
 @app.on_event("startup")

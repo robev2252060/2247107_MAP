@@ -19,7 +19,7 @@ async def get_pool() -> asyncpg.Pool:
                 min_size=5,
                 max_size=20,
             )
-            logger.info("PostgreSQL connection pool created (rule-service)")
+            logger.info("PostgreSQL connection pool created (ms-rulebook)")
         except Exception as e:
             logger.error(f"Failed to create PostgreSQL connection pool: {e}")
             raise
@@ -55,26 +55,25 @@ async def execute_update(query: str, *args) -> int:
         pool = await get_pool()
         async with pool.acquire() as conn:
             result = await conn.execute(query, *args)
-            # Parse the result string to get affected rows count
             return int(result.split()[-1]) if result else 0
     except Exception as e:
         logger.error(f"Database update error: {e}")
         raise
 
 
-def serialize_rule(row) -> dict:
+def serialize_rule(row) -> dict | None:
     """Convert PostgreSQL row to JSON-serializable dict."""
     if row is None:
         return None
+
     return {
-        "id": row["id"],
-        "_id": str(row["id"]),  # MongoDB compatibility
-        "sensor_id": row["sensor_id"],
+        "id": str(row["id"]),
+        "sensor_source": row["sensor_source"],
+        "sensor_metric": row["sensor_metric"],
         "operator": row["operator"],
-        "threshold": row["threshold"],
-        "unit": row["unit"],
-        "actuator_id": row["actuator_id"],
-        "actuator_state": row["actuator_state"],
+        "threshold_value": float(row["threshold_value"]),
+        "target_actuator": row["target_actuator"],
+        "target_state": row["target_state"],
         "enabled": row["enabled"],
         "description": row["description"],
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
@@ -86,22 +85,31 @@ async def create_rule(data: dict) -> dict:
     """Create a new rule in the database."""
     try:
         query = """
-            INSERT INTO mars.rules (sensor_id, operator, threshold, unit, actuator_id, actuator_state, enabled, description)
+            INSERT INTO mars.rules (
+                sensor_source,
+                sensor_metric,
+                operator,
+                threshold_value,
+                target_actuator,
+                target_state,
+                enabled,
+                description
+            )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING id, sensor_id, operator, threshold, unit, actuator_id, actuator_state, enabled, description, created_at, updated_at
+            RETURNING id, sensor_source, sensor_metric, operator, threshold_value, target_actuator, target_state, enabled, description, created_at, updated_at
         """
-        row = await execute_query(
+        rows = await execute_query(
             query,
-            data.get("sensor_id"),
+            data.get("sensor_source"),
+            data.get("sensor_metric"),
             data.get("operator"),
-            data.get("threshold"),
-            data.get("unit"),
-            data.get("actuator_id"),
-            data.get("actuator_state"),
+            data.get("threshold_value"),
+            data.get("target_actuator"),
+            data.get("target_state"),
             data.get("enabled", True),
             data.get("description"),
         )
-        return serialize_rule(row[0]) if row else None
+        return serialize_rule(rows[0]) if rows else None
     except InterfaceError as e:
         logger.error(f"Integrity error creating rule: {e}")
         raise ValueError(f"Invalid rule data: {e}")
@@ -114,7 +122,7 @@ async def list_rules() -> list[dict]:
     """List all rules from the database."""
     try:
         query = """
-            SELECT id, sensor_id, operator, threshold, unit, actuator_id, actuator_state, enabled, description, created_at, updated_at
+            SELECT id, sensor_source, sensor_metric, operator, threshold_value, target_actuator, target_state, enabled, description, created_at, updated_at
             FROM mars.rules
             ORDER BY created_at DESC
         """
@@ -129,7 +137,7 @@ async def get_rule(rule_id: str) -> dict | None:
     """Get a single rule by ID."""
     try:
         query = """
-            SELECT id, sensor_id, operator, threshold, unit, actuator_id, actuator_state, enabled, description, created_at, updated_at
+            SELECT id, sensor_source, sensor_metric, operator, threshold_value, target_actuator, target_state, enabled, description, created_at, updated_at
             FROM mars.rules
             WHERE id = $1
         """
@@ -144,33 +152,34 @@ async def get_rule(rule_id: str) -> dict | None:
 
 
 async def update_rule(rule_id: str, data: dict) -> dict | None:
-    """Update a rule and return the updated rule."""
+    """Update a rule (full replacement)."""
     try:
-        # Build dynamic update query
-        update_fields = []
-        values = []
-        param_count = 1
-        
-        for key, value in data.items():
-            if key in ["sensor_id", "operator", "threshold", "unit", "actuator_id", "actuator_state", "enabled", "description"]:
-                update_fields.append(f"{key} = ${param_count}")
-                values.append(value)
-                param_count += 1
-        
-        if not update_fields:
-            return await get_rule(rule_id)
-        
-        # Add updated_at and rule_id
-        update_fields.append(f"updated_at = NOW()")
-        values.append(int(rule_id))
-        
-        query = f"""
+        query = """
             UPDATE mars.rules
-            SET {', '.join(update_fields)}
-            WHERE id = ${param_count}
-            RETURNING id, sensor_id, operator, threshold, unit, actuator_id, actuator_state, enabled, description, created_at, updated_at
+            SET sensor_source = $2,
+                sensor_metric = $3,
+                operator = $4,
+                threshold_value = $5,
+                target_actuator = $6,
+                target_state = $7,
+                enabled = $8,
+                description = $9,
+                updated_at = NOW()
+            WHERE id = $1
+            RETURNING id, sensor_source, sensor_metric, operator, threshold_value, target_actuator, target_state, enabled, description, created_at, updated_at
         """
-        rows = await execute_query(query, *values)
+        rows = await execute_query(
+            query,
+            int(rule_id),
+            data.get("sensor_source"),
+            data.get("sensor_metric"),
+            data.get("operator"),
+            data.get("threshold_value"),
+            data.get("target_actuator"),
+            data.get("target_state"),
+            data.get("enabled", True),
+            data.get("description"),
+        )
         return serialize_rule(rows[0]) if rows else None
     except ValueError as e:
         logger.error(f"Invalid rule ID {rule_id}: {e}")

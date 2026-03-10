@@ -1,6 +1,6 @@
 import RuleItem from "./RuleItem.jsx";
 
-export default function RuleList({ rules, onDelete, onToggle }) {
+export default function RuleList({ rules, onDelete, onToggle, onEdit }) {
   if (rules.length === 0) {
     return <p className="empty-state">No automation rules defined yet.</p>;
   }
@@ -9,10 +9,11 @@ export default function RuleList({ rules, onDelete, onToggle }) {
     <ul className="rule-list">
       {rules.map((rule) => (
         <RuleItem
-          key={rule._id}
+          key={rule.id}
           rule={rule}
-          onDelete={() => onDelete(rule._id)}
-          onToggle={() => onToggle(rule._id, !rule.enabled)}
+          onDelete={() => onDelete(rule.id)}
+          onToggle={() => onToggle(rule.id, !rule.enabled)}
+          onEdit={(ruleId, newThreshold) => onEdit(ruleId, newThreshold)}
         />
       ))}
     </ul>
