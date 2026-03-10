@@ -1,0 +1,60 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title MAP - C4 Component Diagram (Whole Architecture)
+
+' --- CUSTOM PROTOCOL TAGS ---
+AddRelTag("rest", $textColor="#008000", $lineColor="#008000")
+AddRelTag("sse", $textColor="#0000FF", $lineColor="#0000FF")
+AddRelTag("kafka", $textColor="#FF6600", $lineColor="#FF6600")
+AddRelTag("asyncpg", $textColor="#336791", $lineColor="#336791")
+
+System_Boundary(map, "Mars Automation Platform") {
+
+  Component(fe, "frontend", "React SPA", "UI for sensor monitoring, rule management, and actuator control")
+  Component(int, "ms-integration", "Spring Boot", "Polls/consumes heterogeneous sensor feeds, normalizes and then publishes them")
+  Component(auto, "ms-automation", "FastAPI", "Consumes measurements, evaluates automation rules, emits actuator commands")
+  Component(msact, "ms-actuators", "FastAPI", "Consumes actuator commands, controls actuators and streams actuator events")
+  ComponentDb(db, "DB", "PostgreSQL", "Automation rule persistence")
+
+  ComponentQueue_Ext(kafkaMeasurements, "measurements", "Kafka Topic", "Normalized sensor events")
+  ComponentQueue_Ext(kafkaActuators, "actuators.automation queue", "Kafka Topic", "Actuator toggle commands")
+
+}
+
+System_Ext(src, "sensors", "External heterogeneous sensor source/simulator")
+System_Ext(act, "actuators", "External actuator simulator")
+
+' --- TOP ROW (Horizontal flow: Sensors <-> Integration <-> Frontend <-> Actuator Service <-> External Actuators) ---
+Rel_R(src, int, "Publish heterogeneous sensor data", "SSE", $tags="sse")
+Rel_L(int, src, "Poll heterogeneous sensor data", "REST", $tags="rest")
+
+Rel_R(int, fe, "Publish sensor events", "SSE", $tags="sse")
+
+Rel_R(fe, msact, "Manual actuator toggle", "REST", $tags="rest")
+Rel_L(msact, fe, "Publish actuator events", "SSE", $tags="sse")
+' Let the engine auto-route this one so it curves nicely over msact
+Rel(fe, act, "Fetch actuator states", "REST", $tags="rest")
+
+Rel_R(msact, act, "Update actuator state", "REST", $tags="rest")
+
+
+' --- BOTTOM LOOP (Kafka and Automation flowing underneath) ---
+' Pushes data down from the top row
+Rel_D(int, kafkaMeasurements, "Publish sensor events", "Kafka", $tags="kafka")
+Rel_D(fe, auto, "Update automation rules", "REST", $tags="rest")
+
+' Bottom horizontal flow
+Rel_L(auto, kafkaMeasurements, "Consume sensor events", "Kafka", $tags="kafka")
+Rel_R(auto, kafkaActuators, "Publish actuator commands", "Kafka", $tags="kafka")
+
+' Pushes data back up to the top row
+Rel_D(msact, kafkaActuators, "Consume actuator commands", "Kafka", $tags="kafka")
+
+
+' --- DATABASE (Bottom tier) ---
+' Updated protocol label and tag
+Rel_D(auto, db, "Persist automation rules", "asyncpg", $tags="asyncpg")
+
+SHOW_LEGEND()
+@enduml
