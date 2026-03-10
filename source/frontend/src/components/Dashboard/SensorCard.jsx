@@ -82,10 +82,23 @@ function formatMetricName(metric, unit) {
     .replace(/\b([a-z])/, (m) => m.toUpperCase());
 }
 
+function humanizeString(str) {
+  // Convert snake_case (or kebab-case) to Human Readable (Title Case)
+  return str
+    .replace(/[-_]+/g, " ")
+    .replace(/\b([a-z])/g, (m) => m.toUpperCase());
+}
+
 function formatValue(value, unit) {
   if (value === null || value === undefined) return "-";
+
   const normalized =
-    typeof value === "number" ? value.toFixed(2) : String(value);
+    typeof value === "number"
+      ? value.toFixed(2)
+      : typeof value === "string" && value.match(/^[a-z0-9_\-]+$/)
+      ? humanizeString(value)
+      : String(value);
+
   return unit ? `${normalized} ${unit}` : normalized;
 }
 
