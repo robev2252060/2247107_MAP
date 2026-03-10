@@ -119,6 +119,47 @@ body {
   }
 }
 
+.sensor-group {
+  margin-bottom: 2rem;
+}
+
+.sensor-group__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.35rem;
+}
+
+.sensor-group__cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 1120px) {
+  .sensor-group__cards {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .sensor-group__cards {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .sensor-group__cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 .sensor-card {
   width: 100%;
   min-height: 120px;
