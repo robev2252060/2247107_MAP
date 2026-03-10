@@ -415,6 +415,10 @@ body {
   color: var(--color-muted);
   text-transform: uppercase;
 }
+.rule-form__row textarea::placeholder {
+  font-family: Helvetica, sans-serif, Arial;
+  color: var(--color-muted);
+}
 
 .rule-form__row input,
 .rule-form__row select {
