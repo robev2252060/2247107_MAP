@@ -92,7 +92,7 @@ services:
 
   ms-automation:
     build:
-      context: ./source/processing-service
+      context: ./source/ms-automation
       dockerfile: Dockerfile
     container_name: mars-automation
     environment:
@@ -111,7 +111,7 @@ services:
 
   ms-rulebook:
     build:
-      context: ./source/rule-service
+      context: ./source/ms-rulebook
       dockerfile: Dockerfile
     container_name: mars-rulebook
     environment:
