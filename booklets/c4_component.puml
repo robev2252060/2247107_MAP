@@ -1,7 +1,7 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-title MAP - C4 Component Diagram (Whole Architecture)
+title MAP - C4 Component Diagram
 
 ' --- CUSTOM PROTOCOL TAGS ---
 AddRelTag("rest", $textColor="#008000", $lineColor="#008000")
