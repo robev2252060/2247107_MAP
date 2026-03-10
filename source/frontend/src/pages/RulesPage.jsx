@@ -106,13 +106,32 @@ export default function RulesPage() {
     setRules((prev) => prev.map((r) => (r.id === ruleId ? normalizeRule(updated) : r)));
   }
 
+  async function handleEdit(ruleId, newThreshold) {
+    const current = rules.find((r) => r.id === ruleId);
+    if (!current) return;
+
+    const payload = {
+      sensor_source: toFinalSourceIdentifier(current.sensor_source),
+      sensor_metric: current.sensor_metric,
+      operator: current.operator,
+      threshold_value: newThreshold,
+      target_actuator: current.target_actuator,
+      target_state: current.target_state,
+      enabled: current.enabled,
+      description: current.description ?? null,
+    };
+
+    const updated = await updateRule(ruleId, payload);
+    setRules((prev) => prev.map((r) => (r.id === ruleId ? normalizeRule(updated) : r)));
+  }
+
   return (
     <section className="page">
       <h1>Automation Rules</h1>
       {error && <div className="error-banner">{error}</div>}
       <div className="rules-layout">
         <RuleForm onSubmit={handleCreate} loading={loading} sourceMetrics={sourceMetrics} />
-        <RuleList rules={rules} onDelete={handleDelete} onToggle={handleToggle} />
+        <RuleList rules={rules} onDelete={handleDelete} onToggle={handleToggle} onEdit={handleEdit} />
       </div>
     </section>
   );
