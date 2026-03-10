@@ -14,11 +14,12 @@ System_Boundary(map, "Mars Automation Platform") {
   Component(fe, "frontend", "React SPA", "UI for sensor monitoring, rule management, and actuator control")
   Component(int, "ms-integration", "Spring Boot", "Polls/consumes heterogeneous sensor feeds, normalizes and then publishes them")
   Component(auto, "ms-automation", "FastAPI", "Consumes measurements, evaluates automation rules, emits actuator commands")
+  Component(rulebook, "ms-rulebook", "FastAPI", "CRUD service for automation rules")
   Component(msact, "ms-actuators", "FastAPI", "Consumes actuator commands, controls actuators and streams actuator events")
-  ComponentDb(db, "DB", "PostgreSQL", "Automation rule persistence")
+  ComponentDb(db, "DB", "PostgreSQL", "Rule persistence + rule execution audit")
 
   ComponentQueue_Ext(kafkaMeasurements, "measurements", "Kafka Topic", "Normalized sensor events")
-  ComponentQueue_Ext(kafkaActuators, "actuators.automation queue", "Kafka Topic", "Actuator toggle commands")
+  ComponentQueue_Ext(kafkaActuators, "actuators.automation", "Kafka Topic", "Actuator toggle commands")
 
 }
 
@@ -38,23 +39,20 @@ Rel(fe, act, "Fetch actuator states", "REST", $tags="rest")
 
 Rel_R(msact, act, "Update actuator state", "REST", $tags="rest")
 
-
-' --- BOTTOM LOOP (Kafka and Automation flowing underneath) ---
-' Pushes data down from the top row
+' --- MIDDLE LAYER (Kafka, Rulebook, and Automation Engine) ---
+' Push data down from the top row components
 Rel_D(int, kafkaMeasurements, "Publish sensor events", "Kafka", $tags="kafka")
-Rel_D(fe, auto, "Update automation rules", "REST", $tags="rest")
+Rel_D(fe, rulebook, "Create/update/delete automation rules", "REST", $tags="rest")
+Rel_D(msact, kafkaActuators, "Consume actuator commands", "Kafka", $tags="kafka")
 
-' Bottom horizontal flow
+' Center horizontal flow (Auto pulls from the left topic and pushes to the right topic)
 Rel_L(auto, kafkaMeasurements, "Consume sensor events", "Kafka", $tags="kafka")
 Rel_R(auto, kafkaActuators, "Publish actuator commands", "Kafka", $tags="kafka")
 
-' Pushes data back up to the top row
-Rel_D(msact, kafkaActuators, "Consume actuator commands", "Kafka", $tags="kafka")
-
-
 ' --- DATABASE (Bottom tier) ---
-' Updated protocol label and tag
-Rel_D(auto, db, "Persist automation rules", "asyncpg", $tags="asyncpg")
+' Both rulebook and auto push straight down to the DB
+Rel_D(rulebook, db, "Persist automation rules", "asyncpg", $tags="asyncpg")
+Rel_D(auto, db, "Read enabled rules + write rule executions", "asyncpg", $tags="asyncpg")
 
 SHOW_LEGEND()
 @enduml
