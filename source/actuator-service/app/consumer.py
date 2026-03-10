@@ -4,7 +4,7 @@ from aiokafka import AIOKafkaConsumer
 
 from app.config import settings
 from app.simulator_client import set_actuator_state
-from app.stream import stream_hub, to_measurement_event
+from app.stream import stream_hub
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,11 @@ async def consume_loop() -> None:
 
             try:
                 await set_actuator_state(actuator_id, actuator_state)
-                await stream_hub.publish(to_measurement_event(actuator_id, actuator_state))
+                await stream_hub.publish_state(
+                    actuator_id,
+                    actuator_state,
+                    command.get("timestamp"),
+                )
             except Exception as exc:
                 logger.exception("Failed to execute actuator command %s: %s", command, exc)
     finally:

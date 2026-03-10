@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from app.config import settings
 from app.consumer import consume_loop
 from app.simulator_client import get_all_actuators, set_actuator_state, KNOWN_ACTUATORS
-from app.stream import stream_hub, to_measurement_event
+from app.stream import stream_hub
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,9 +37,21 @@ class ActuatorCommand(BaseModel):
 # Lifecycle
 # ---------------------------------------------------------------------------
 
+_consumer_task: asyncio.Task | None = None
+
+
 @app.on_event("startup")
 async def on_startup() -> None:
-    asyncio.create_task(consume_loop())
+    global _consumer_task
+    _consumer_task = asyncio.create_task(consume_loop())
+
+    # Seed stream cache with current actuator states at boot.
+    try:
+        actuators = await get_all_actuators()
+        stream_hub.seed_cache(actuators)
+        logger.info("Seeded actuator stream cache with %d actuators", len(actuators))
+    except Exception as exc:
+        logger.warning("Failed to seed actuator stream cache at startup: %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -56,6 +68,8 @@ async def stream_actuators() -> StreamingResponse:
     async def event_stream():
         queue = stream_hub.subscribe()
         try:
+            for frame in stream_hub.replay_snapshot_frames():
+                yield frame
             while True:
                 frame = await queue.get()
                 yield frame
@@ -69,7 +83,9 @@ async def stream_actuators() -> StreamingResponse:
 async def list_actuators() -> list[dict]:
     """Return all actuators with their current simulator state."""
     try:
-        return await get_all_actuators()
+        actuators = await get_all_actuators()
+        stream_hub.seed_cache(actuators)
+        return actuators
     except Exception as exc:
         logger.exception("Error fetching actuators from simulator")
         # include the raw exception message so gateway/front-end can log it
@@ -78,12 +94,12 @@ async def list_actuators() -> list[dict]:
 
 @app.post("/actuators/{actuator_id}")
 async def control_actuator(actuator_id: str, body: ActuatorCommand) -> dict:
-    """Manually set an actuator state (bypasses Kafka — direct control)."""
+    """Manually set an actuator state (bypasses Kafka - direct control)."""
     if actuator_id not in KNOWN_ACTUATORS:
         raise HTTPException(status_code=404, detail=f"Actuator '{actuator_id}' not found")
     try:
         result = await set_actuator_state(actuator_id, body.state)
-        await stream_hub.publish(to_measurement_event(actuator_id, body.state))
+        await stream_hub.publish_state(actuator_id, body.state)
         return {"actuator_id": actuator_id, "state": body.state, "result": result}
     except Exception as exc:
         logger.exception("Failed to set actuator %s", actuator_id)
