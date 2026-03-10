@@ -1,6 +1,6 @@
 export default function RuleItem({ rule, onDelete, onToggle }) {
-  const condition = `IF ${rule.sensor_id} ${rule.operator} ${rule.threshold}${rule.unit ? ` ${rule.unit}` : ""}`;
-  const action    = `THEN set ${rule.actuator_id} to ${rule.actuator_state}`;
+  const condition = `IF ${rule.sensor_source}.${rule.sensor_metric} ${rule.operator} ${rule.threshold_value}`;
+  const action    = `THEN set ${rule.target_actuator} to ${rule.target_state}`;
 
   return (
     <li className={`rule-item ${rule.enabled ? "" : "rule-item--disabled"}`}>

@@ -1,16 +1,25 @@
 """
 Rule Engine
 -----------
-Evaluates IF-THEN automation rules against a normalized MarsEvent.
+Evaluates IF-THEN automation rules against a MeasurementEvent.
 
-Rule model (from MongoDB):
+Rule model (from PostgreSQL):
 {
-    "sensor_id":    str,   — sensor to watch
-    "operator":     str,   — one of: <, <=, =, >, >=
-    "threshold":    float, — numeric comparison value
-    "unit":         str | None,
-    "actuator_id":  str,   — target actuator
-    "actuator_state": "ON" | "OFF"
+    "id":               int,
+    "sensor_source":    str,   — sensor source to watch
+    "sensor_metric":    str,   — specific metric to monitor
+    "operator":         str,   — one of: <, <=, =, >, >=
+    "threshold_value":  float, — numeric comparison value
+    "target_actuator":  str,   — target actuator
+    "target_state":     str    — "ON" | "OFF"
+}
+
+MeasurementEvent model:
+{
+    "timestamp":  str (ISO 8601),
+    "source":     str,
+    "status":     str | None,
+    "readings":   [{"metric": str, "value": number|str, "unit": str | None}]
 }
 """
 
@@ -33,51 +42,81 @@ OPERATORS: dict[str, Any] = {
 }
 
 
-def evaluate_rules(event: dict, rules: list[dict]) -> list[dict]:
+def evaluate_rules_against_measurement(event: dict, rules: list[dict]) -> list[dict]:
     """
-    Given a normalized MarsEvent and a list of persisted rules,
-    return the list of actuator commands that should be triggered.
+    Given a MeasurementEvent and a list of rules,
+    return the list of rule evaluations.
 
-    Each returned command dict:
+    Each returned evaluation dict:
     {
-        "actuator_id":    str,
-        "actuator_state": "ON" | "OFF",
-        "triggered_by_rule": str  (rule _id as string)
+        "rule_id":           int,
+        "sensor_source":     str,
+        "sensor_metric":     str,
+        "measurement_value": float,
+        "operator":          str,
+        "threshold_value":   float,
+        "target_actuator":   str,
+        "target_state":      str,
+        "triggered":         bool
     }
     """
-    commands: list[dict] = []
+    evaluations: list[dict] = []
 
-    sensor_id = event.get("sensor_id")
-    event_value = event.get("value")
+    source = event.get("source")
+    readings = event.get("readings", [])
 
-    if event_value is None or not isinstance(event_value, (int, float)):
-        return commands
+    if not source or not readings:
+        return evaluations
 
+    # Build metric -> value map
+    metric_values = {}
+    for reading in readings:
+        metric = reading.get("metric")
+        value = reading.get("value")
+        if metric and value is not None:
+            try:
+                metric_values[metric] = float(value)
+            except (TypeError, ValueError):
+                pass
+
+    # Evaluate each rule
     for rule in rules:
-        if rule.get("sensor_id") != sensor_id:
+        rule_source = rule.get("sensor_source")
+        rule_metric = rule.get("sensor_metric")
+
+        # Rule must match source
+        if rule_source != source:
             continue
 
-        operator_str = rule.get("operator", "")
-        threshold = rule.get("threshold")
-        compare_fn = OPERATORS.get(operator_str)
+        # Check if we have the metric
+        if rule_metric not in metric_values:
+            continue
 
+        measurement_value = metric_values[rule_metric]
+        operator_str = rule.get("operator")
+        threshold = rule.get("threshold_value")
+
+        compare_fn = OPERATORS.get(operator_str)
         if compare_fn is None or threshold is None:
             logger.warning("Skipping malformed rule: %s", rule)
             continue
 
         try:
-            if compare_fn(float(event_value), float(threshold)):
-                commands.append({
-                    "actuator_id":       rule["actuator_id"],
-                    "actuator_state":    rule["actuator_state"],
-                    "triggered_by_rule": str(rule.get("_id", "")),
-                })
-                logger.info(
-                    "Rule triggered: %s %s %s → %s=%s",
-                    sensor_id, operator_str, threshold,
-                    rule["actuator_id"], rule["actuator_state"],
-                )
+            triggered = compare_fn(measurement_value, float(threshold))
+
+            evaluations.append({
+                "rule_id":           rule["id"],
+                "sensor_source":     rule_source,
+                "sensor_metric":     rule_metric,
+                "measurement_value": measurement_value,
+                "operator":          operator_str,
+                "threshold_value":   threshold,
+                "target_actuator":   rule["target_actuator"],
+                "target_state":      rule["target_state"],
+                "triggered":         triggered,
+            })
+
         except (TypeError, ValueError) as exc:
             logger.warning("Rule evaluation error: %s", exc)
 
-    return commands
+    return evaluations

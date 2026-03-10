@@ -1,0 +1,21 @@
+openapi: 3.0.3
+
+info:
+  title: Mars MS-Actuator API
+  version: 1.0.0
+  description: API for the Actuator Microservice. Toggles actuator states and streams actuator events via SSE.
+
+paths:
+
+  /api/actuators/stream:
+
+    get:
+      summary: Stream actuator state events
+      description: Establishes a Server-Sent Events (SSE) connection to stream actuator state changes to the frontend dashboard.
+      responses:
+        '200':
+          description: SSE stream connected successfully.
+          content:
+            text/event-stream:
+              schema:
+                $ref: './components.yaml#/components/schemas/MeasurementEvent'

@@ -9,10 +9,10 @@ export default function RuleList({ rules, onDelete, onToggle }) {
     <ul className="rule-list">
       {rules.map((rule) => (
         <RuleItem
-          key={rule._id}
+          key={rule.id}
           rule={rule}
-          onDelete={() => onDelete(rule._id)}
-          onToggle={() => onToggle(rule._id, !rule.enabled)}
+          onDelete={() => onDelete(rule.id)}
+          onToggle={() => onToggle(rule.id, !rule.enabled)}
         />
       ))}
     </ul>

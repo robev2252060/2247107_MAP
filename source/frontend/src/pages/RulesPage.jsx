@@ -32,13 +32,27 @@ export default function RulesPage() {
 
   async function handleDelete(ruleId) {
     await deleteRule(ruleId);
-    setRules((prev) => prev.filter((r) => r._id !== ruleId));
+    setRules((prev) => prev.filter((r) => r.id !== ruleId));
   }
 
   async function handleToggle(ruleId, enabled) {
-    await updateRule(ruleId, { enabled });
+    const current = rules.find((r) => r.id === ruleId);
+    if (!current) return;
+
+    const payload = {
+      sensor_source: current.sensor_source,
+      sensor_metric: current.sensor_metric,
+      operator: current.operator,
+      threshold_value: current.threshold_value,
+      target_actuator: current.target_actuator,
+      target_state: current.target_state,
+      enabled,
+      description: current.description ?? null,
+    };
+
+    const updated = await updateRule(ruleId, payload);
     setRules((prev) =>
-      prev.map((r) => (r._id === ruleId ? { ...r, enabled } : r))
+      prev.map((r) => (r.id === ruleId ? updated : r))
     );
   }
 

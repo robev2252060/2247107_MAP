@@ -2,28 +2,14 @@ from fastapi import APIRouter, HTTPException, status
 import logging
 
 from app.db import create_rule, list_rules, get_rule, update_rule, delete_rule
-from app.models import RuleCreate, RuleUpdate
+from app.models import RuleCreate, RuleUpdate, RuleResponse
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/rules", tags=["Rules"])
+router = APIRouter(prefix="/api/rules", tags=["Rules"])
 
 
-@router.get("/", summary="List all automation rules")
-async def list_all_rules() -> list[dict]:
-    try:
-        rules = await list_rules()
-        logger.info(f"Retrieved {len(rules)} rules")
-        return rules
-    except Exception as e:
-        logger.error(f"Error listing rules: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve rules: {str(e)}"
-        )
-
-
-@router.post("/", status_code=status.HTTP_201_CREATED, summary="Create a new automation rule")
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=RuleResponse)
 async def create_new_rule(body: RuleCreate) -> dict:
     try:
         rule = await create_rule(body.model_dump())
@@ -43,7 +29,21 @@ async def create_new_rule(body: RuleCreate) -> dict:
         )
 
 
-@router.get("/{rule_id}", summary="Get a single rule by ID")
+@router.get("/", response_model=list[RuleResponse])
+async def list_all_rules() -> list[dict]:
+    try:
+        rules = await list_rules()
+        logger.info(f"Retrieved {len(rules)} rules")
+        return rules
+    except Exception as e:
+        logger.error(f"Error listing rules: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve rules: {str(e)}"
+        )
+
+
+@router.get("/{rule_id}", response_model=RuleResponse)
 async def get_single_rule(rule_id: str) -> dict:
     try:
         rule = await get_rule(rule_id)
@@ -60,13 +60,10 @@ async def get_single_rule(rule_id: str) -> dict:
         )
 
 
-@router.patch("/{rule_id}", summary="Partially update a rule")
-async def patch_rule(rule_id: str, body: RuleUpdate) -> dict:
+@router.put("/{rule_id}", response_model=RuleResponse)
+async def update_existing_rule(rule_id: str, body: RuleUpdate) -> dict:
     try:
-        updates = {k: v for k, v in body.model_dump().items() if v is not None}
-        if not updates:
-            raise HTTPException(status_code=400, detail="No fields to update")
-        rule = await update_rule(rule_id, updates)
+        rule = await update_rule(rule_id, body.model_dump())
         if rule is None:
             raise HTTPException(status_code=404, detail=f"Rule '{rule_id}' not found")
         logger.info(f"Updated rule {rule_id}")
@@ -81,7 +78,7 @@ async def patch_rule(rule_id: str, body: RuleUpdate) -> dict:
         )
 
 
-@router.delete("/{rule_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a rule")
+@router.delete("/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_rule(rule_id: str) -> None:
     try:
         deleted = await delete_rule(rule_id)
