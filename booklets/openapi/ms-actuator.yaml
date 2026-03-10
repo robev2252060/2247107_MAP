@@ -7,6 +7,13 @@ info:
 
 paths:
 
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy.
+
   /api/actuators/stream:
 
     get:
@@ -19,3 +26,56 @@ paths:
             text/event-stream:
               schema:
                 $ref: './components.yaml#/components/schemas/MeasurementEvent'
+
+  /actuators/:
+
+    get:
+      summary: List all actuators
+      responses:
+        '200':
+          description: Current actuator states retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [ actuator_name, state ]
+                  properties:
+                    actuator_name:
+                      type: string
+                    state:
+                      type: string
+                      enum: [ 'ON', 'OFF' ]
+                    updated_at:
+                      type: string
+                      format: date-time
+
+  /actuators/{actuator_id}:
+
+    post:
+      summary: Manually set actuator state
+      parameters:
+        - name: actuator_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ state ]
+              properties:
+                state:
+                  type: string
+                  enum: [ 'ON', 'OFF' ]
+      responses:
+        '200':
+          description: Actuator command executed.
+        '404':
+          description: Actuator not found.
+        '502':
+          description: Upstream simulator error.
