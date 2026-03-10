@@ -38,6 +38,7 @@ async def consume_loop() -> None:
                     actuator_id,
                     actuator_state,
                     command.get("timestamp"),
+                    command.get("triggered_by_rule"),
                 )
             except Exception as exc:
                 logger.exception("Failed to execute actuator command %s: %s", command, exc)

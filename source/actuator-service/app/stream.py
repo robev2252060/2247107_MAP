@@ -40,14 +40,20 @@ class ActuatorStreamHub:
             frames.append(self._to_frame(payload))
         return frames
 
-    async def publish_state(self, actuator: str, state: str, timestamp: str | None = None) -> None:
+    async def publish_state(
+        self,
+        actuator: str,
+        state: str,
+        timestamp: str | None = None,
+        rule_id: str | None = None,
+    ) -> None:
         ts = timestamp or _iso_now()
         self._state_cache[actuator] = {
             "state": state,
             "updated_at": ts,
         }
 
-        payload = to_measurement_event(actuator, state, ts)
+        payload = to_measurement_event(actuator, state, ts, rule_id)
         frame = self._to_frame(payload)
 
         for queue in self._subscribers:
@@ -57,14 +63,22 @@ class ActuatorStreamHub:
         return f"event: measurement\ndata:{json.dumps(payload)}\n\n"
 
 
-def to_measurement_event(actuator: str, state: str, timestamp: str | None = None) -> dict[str, Any]:
-    return {
+def to_measurement_event(
+    actuator: str,
+    state: str,
+    timestamp: str | None = None,
+    rule_id: str | None = None,
+) -> dict[str, Any]:
+    event = {
         "timestamp": timestamp or _iso_now(),
         "source": actuator,
         "readings": [
             {"metric": "state", "value": state}
         ],
     }
+    if rule_id:
+        event["rule_id"] = rule_id
+    return event
 
 
 stream_hub = ActuatorStreamHub()
