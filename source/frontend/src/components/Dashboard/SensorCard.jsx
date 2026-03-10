@@ -89,6 +89,12 @@ function formatValue(value, unit) {
   return unit ? `${normalized} ${unit}` : normalized;
 }
 
+function isStale(timestamp) {
+  if (!timestamp) return true;
+  const FIVE_MINUTES = 5 * 60 * 1000;
+  return Date.now() - new Date(timestamp).getTime() > FIVE_MINUTES;
+}
+
 export default function SensorCard({ sensorKey, event }) {
   const icon = SENSOR_ICONS[sensorKey] ?? "📡";
   const label = formatLabel(sensorKey);
@@ -96,9 +102,10 @@ export default function SensorCard({ sensorKey, event }) {
     ? new Date(event.timestamp).toLocaleTimeString()
     : "-";
   const readings = Array.isArray(event?.readings) ? event.readings : [];
+  const stale = isStale(event?.timestamp);
 
   return (
-    <div className="sensor-card">
+    <div className={`sensor-card ${stale ? "sensor-card--stale" : ""}`}>
       <div className="sensor-card__icon">{icon}</div>
       <div className="sensor-card__body">
         <span className="sensor-card__label">{label}</span>
@@ -114,7 +121,12 @@ export default function SensorCard({ sensorKey, event }) {
             </div>
           ))}
         </div>
-        <span className="sensor-card__ts">Updated {ts}</span>
+        <span className="sensor-card__ts">
+          Updated {ts}
+          {stale && (
+            <span className="sensor-card__stale-badge">⚠️ Stale data</span>
+          )}
+        </span>
       </div>
     </div>
   );

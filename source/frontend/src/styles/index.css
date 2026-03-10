@@ -221,6 +221,17 @@ body {
   color: var(--color-muted);
 }
 
+.sensor-card--stale {
+  border-color: #b45309;
+}
+
+.sensor-card__stale-badge {
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
 /* ---- Status dot ---- */
 .status-dot { font-size: 0.8rem; font-weight: 600; }
 .status-dot--ok  { color: var(--color-success); }
