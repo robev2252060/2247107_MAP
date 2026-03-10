@@ -2,20 +2,26 @@
    Mars IoT Platform — Global Styles
    ============================================================ */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 :root {
-  --color-bg:        #0d0f14;
-  --color-surface:   #161b27;
-  --color-border:    #2a3148;
-  --color-primary:   #4f9cf9;
-  --color-danger:    #e05260;
-  --color-success:   #3ecf8e;
-  --color-text:      #e2e8f0;
-  --color-muted:     #7c8ba1;
-  --radius:          8px;
-  --sidebar-width:   220px;
-  --navbar-height:   56px;
+  --color-bg: #0d0f14;
+  --color-surface: #161b27;
+  --color-border: #2a3148;
+  --color-primary: #4f9cf9;
+  --color-danger: #e05260;
+  --color-success: #3ecf8e;
+  --color-text: #e2e8f0;
+  --color-muted: #7c8ba1;
+  --radius: 8px;
+  --sidebar-width: 220px;
+  --navbar-height: 56px;
 }
 
 body {
@@ -27,7 +33,11 @@ body {
 }
 
 /* ---- Layout ---- */
-.layout { display: flex; flex-direction: column; height: 100vh; }
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
 
 .layout__body {
   display: flex;
@@ -72,7 +82,9 @@ body {
   color: var(--color-muted);
   text-decoration: none;
   border-radius: 0;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .sidebar__link:hover,
@@ -81,7 +93,9 @@ body {
   color: var(--color-primary);
 }
 
-.sidebar__icon { font-size: 1rem; }
+.sidebar__icon {
+  font-size: 1rem;
+}
 
 /* ---- Sensor Grid ---- */
 .dashboard__header {
@@ -174,15 +188,24 @@ body {
   overflow: hidden;
 }
 
-.sensor-card:hover { border-color: var(--color-primary); }
+.sensor-card:hover {
+  border-color: var(--color-primary);
+}
 
-.sensor-card:hover { border-color: var(--color-primary); }
+.sensor-card:hover {
+  border-color: var(--color-primary);
+}
 
-.sensor-card__icon { font-size: 1.8rem; line-height: 1; }
+.sensor-card__icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
 
 .sensor-card__body {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
   gap: 4px;
   width: 100%;
 }
@@ -217,6 +240,9 @@ body {
 }
 
 .sensor-card__ts {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 0.7rem;
   color: var(--color-muted);
 }
@@ -225,17 +251,36 @@ body {
   border-color: #b45309;
 }
 
-.sensor-card__stale-badge {
+.sensor-card--warning {
+  border-color: #e05260;
+}
+
+.sensor-card__stale-badge,
+.sensor-card__warning-badge {
   margin-left: 0.5rem;
   font-size: 0.7rem;
-  color: #f59e0b;
   font-weight: 600;
 }
 
+.sensor-card__stale-badge {
+  color: #f59e0b;
+}
+
+.sensor-card__warning-badge {
+  color: #e05260;
+}
+
 /* ---- Status dot ---- */
-.status-dot { font-size: 0.8rem; font-weight: 600; }
-.status-dot--ok  { color: var(--color-success); }
-.status-dot--err { color: var(--color-danger); }
+.status-dot {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.status-dot--ok {
+  color: var(--color-success);
+}
+.status-dot--err {
+  color: var(--color-danger);
+}
 
 /* ---- Rules ---- */
 .rules-layout {
@@ -245,7 +290,12 @@ body {
   align-items: start;
 }
 
-.rule-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.rule-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
 
 .rule-item {
   background: var(--color-surface);
@@ -258,20 +308,40 @@ body {
   gap: 1rem;
 }
 
-.rule-item--disabled { opacity: 0.45; }
+.rule-item--disabled {
+  opacity: 0.45;
+}
 
 .rule-item--edit {
   flex-direction: column;
   align-items: flex-start;
 }
 
-.rule-item__body { display: flex; flex-direction: column; gap: 4px; }
+.rule-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-.rule-item__condition { color: var(--color-primary); font-size: 0.85rem; }
-.rule-item__action    { color: var(--color-success);  font-size: 0.85rem; }
-.rule-item__desc      { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; }
+.rule-item__condition {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+}
+.rule-item__action {
+  color: var(--color-success);
+  font-size: 0.85rem;
+}
+.rule-item__desc {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-top: 4px;
+}
 
-.rule-item__actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.rule-item__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
 
 .rule-item__edit-form {
   display: flex;
@@ -325,11 +395,26 @@ body {
   gap: 0.75rem;
 }
 
-.rule-form__title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
-.rule-form__error { color: var(--color-danger); font-size: 0.8rem; }
+.rule-form__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.rule-form__error {
+  color: var(--color-danger);
+  font-size: 0.8rem;
+}
 
-.rule-form__row { display: flex; flex-direction: column; gap: 4px; }
-.rule-form__row label { font-size: 0.75rem; color: var(--color-muted); text-transform: uppercase; }
+.rule-form__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rule-form__row label {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+}
 
 .rule-form__row input,
 .rule-form__row select {
@@ -358,10 +443,16 @@ body {
   gap: 1rem;
 }
 
-.actuator-toggle--on  { border-color: var(--color-success); }
-.actuator-toggle--off { border-color: var(--color-border); }
+.actuator-toggle--on {
+  border-color: var(--color-success);
+}
+.actuator-toggle--off {
+  border-color: var(--color-border);
+}
 
-.actuator-toggle__icon  { font-size: 1.8rem; }
+.actuator-toggle__icon {
+  font-size: 1.8rem;
+}
 
 .actuator-toggle__meta {
   display: flex;
@@ -390,17 +481,50 @@ body {
   font-weight: 500;
   transition: opacity 0.15s;
 }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn--primary { background: var(--color-primary);  color: #fff; }
-.btn--danger  { background: var(--color-danger);   color: #fff; }
-.btn--ghost   { background: transparent; border: 1px solid var(--color-border); color: var(--color-text); }
-.btn--sm      { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn--danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+.btn--sm {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+}
 
 /* ---- Misc ---- */
-.page h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
-.error-banner { background: rgba(224,82,96,0.15); border: 1px solid var(--color-danger); border-radius: var(--radius); padding: 0.75rem 1rem; color: var(--color-danger); margin-bottom: 1rem; }
-.empty-state  { color: var(--color-muted); }
-.dashboard__empty { color: var(--color-muted); margin-top: 2rem; text-align: center; }
+.page h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+.error-banner {
+  background: rgba(224, 82, 96, 0.15);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  color: var(--color-danger);
+  margin-bottom: 1rem;
+}
+.empty-state {
+  color: var(--color-muted);
+}
+.dashboard__empty {
+  color: var(--color-muted);
+  margin-top: 2rem;
+  text-align: center;
+}
 
 /* ---- Toast notifications ---- */
 .toast-container {
@@ -422,20 +546,36 @@ body {
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   animation: toast-in 0.2s ease;
 }
 
 @keyframes toast-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.toast--success { border-color: var(--color-success); }
-.toast--info    { border-color: var(--color-primary); }
-.toast--error   { border-color: var(--color-danger); }
+.toast--success {
+  border-color: var(--color-success);
+}
+.toast--info {
+  border-color: var(--color-primary);
+}
+.toast--error {
+  border-color: var(--color-danger);
+}
 
-.toast__msg  { flex: 1; font-size: 0.85rem; line-height: 1.4; }
+.toast__msg {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
 .toast__close {
   background: none;
   border: none;

@@ -96,8 +96,8 @@ function formatValue(value, unit) {
     typeof value === "number"
       ? value.toFixed(2)
       : typeof value === "string" && value.match(/^[a-z0-9_\-]+$/)
-      ? humanizeString(value)
-      : String(value);
+        ? humanizeString(value)
+        : String(value);
 
   return unit ? `${normalized} ${unit}` : normalized;
 }
@@ -116,30 +116,38 @@ export default function SensorCard({ sensorKey, event }) {
     : "-";
   const readings = Array.isArray(event?.readings) ? event.readings : [];
   const stale = isStale(event?.timestamp);
+  const warning = String(event?.status ?? "").toLowerCase() === "warning";
+
+  const cardClassNames = ["sensor-card"];
+  if (stale) cardClassNames.push("sensor-card--stale");
+  if (warning) cardClassNames.push("sensor-card--warning");
 
   return (
-    <div className={`sensor-card ${stale ? "sensor-card--stale" : ""}`}>
-      <div className="sensor-card__icon">{icon}</div>
-      <div className="sensor-card__body">
-        <span className="sensor-card__label">{label}</span>
-        <div className="sensor-card__metrics">
-          {readings.map((reading) => (
-            <div className="sensor-card__metric" key={reading.metric}>
-              <span className="sensor-card__metric-name">
-                {formatMetricName(reading.metric, reading.unit)}
-              </span>
-              <span className="sensor-card__metric-value">
-                {formatValue(reading.value, reading.unit)}
-              </span>
+    <div className={cardClassNames.join(" ")}>
+          <div className="sensor-card__icon">{icon}</div>
+          <div className="sensor-card__body">
+            <span className="sensor-card__label">{label}</span>
+            <div className="sensor-card__metrics">
+              {readings.map((reading) => (
+                <div className="sensor-card__metric" key={reading.metric}>
+                  <span className="sensor-card__metric-name">
+                    {formatMetricName(reading.metric, reading.unit)}
+                  </span>
+                  <span className="sensor-card__metric-value">
+                    {formatValue(reading.value, reading.unit)}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <span className="sensor-card__ts">
+        <div className="sensor-card__ts">
           Updated {ts}
+          {warning && (
+            <span className="sensor-card__warning-badge">⚠️ Out of bounds</span>
+          )}
           {stale && (
             <span className="sensor-card__stale-badge">⚠️ Stale data</span>
           )}
-        </span>
+        </div>
       </div>
     </div>
   );
